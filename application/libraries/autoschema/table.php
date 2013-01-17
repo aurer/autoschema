@@ -5,7 +5,7 @@ use \AutoSchema\AutoSchema as AutoSchema;
 class Table
 {
 	protected $definition;
-	protected $errors = [];
+	protected $errors = array();
 
 	function __construct($definition)
 	{
