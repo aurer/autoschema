@@ -122,7 +122,7 @@ class AutoSchema
 	{
 		$database = static::tables_in_database();
 		$definition = static::tables_in_definition();
-		$tables = array('in_definition'=>[], 'in_database'=>[], 'in_both'=>[]);
+		$tables = array('in_definition'=>array(), 'in_database'=>array(), 'in_both'=>array());
 		foreach ($definition as $value) {
 			if( !in_array($value, $database) ){
 				$tables['in_definition'][] = $value;
@@ -137,9 +137,9 @@ class AutoSchema
 		}
 
 		$merged = array_merge($tables['in_definition'], $tables['in_database'], $tables['in_both']);
-		$result = [];
+		$result = array();
 		foreach ($merged as $key => $table) {
-			$result[$key]['schema_errors'] 	= [];
+			$result[$key]['schema_errors'] 	= array();
 			$result[$key]['name'] 			= $table;
 			$result[$key]['valid'] 			= true;
 			$result[$key]['error'] 			= '';
