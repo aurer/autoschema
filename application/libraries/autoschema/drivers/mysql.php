@@ -127,7 +127,7 @@ class MySql extends Driver {
 		$schema 				= AutoSchema::get($table);
 		$alter_table 			= "ALTER TABLE $table";
 		$pk_definition			= "";
-		$alter_statements 		= [];
+		$alter_statements 		= array();
 		$after_previous_column  = "";
 
 		if( !$schema ) {
