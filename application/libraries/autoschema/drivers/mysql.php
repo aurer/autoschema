@@ -110,7 +110,7 @@ class MySql extends Driver {
 			$length = ($column->character_maximum_length) ? $column->character_maximum_length : '';
 			
 			// Remove length for these types as they don't have length defined in the schema.
-			if( in_array($type, ['text']) ){
+			if( in_array($type, array('text')) ){
 				$length = '';
 			}
 
