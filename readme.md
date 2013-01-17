@@ -18,9 +18,7 @@ enjoy, not something that is painful. Enjoy the fresh air.
 
 ### Define a users table:
 
-```php
-<?php
-
+```php 
 AutoSchema::define('users', function($table)
 {
     $table->increments('id');
@@ -32,13 +30,11 @@ AutoSchema::define('users', function($table)
     $table->boolean('active');
     $table->timestamps();
 });
-```
+ ```
 
 ### Add additional information:
 
-```php
-<?php
-
+```php 
 AutoSchema::define('users', function($table)
 {
     $table->increments('id');
@@ -50,4 +46,76 @@ AutoSchema::define('users', function($table)
     $table->boolean('active');
     $table->timestamps();
 });
+ ```
+
+### Default Routes
+
+```php 
+
+// Show all tables and status reports
+Route::get('/autoschema', function()
+{
+    AutoSchema::load_definitions();
+    $data['tables'] = AutoSchema::check_tables();
+    return View::make('autoschema.index')->with($data);
+});
+
+// Create a table using the definition
+Route::get('autoschema/create/(:any)', function($table)
+{
+    $result = AutoSchema::create($table);
+    return Redirect::back();
+});
+
+// Drop a table from the database
+Route::get('autoschema/drop/(:any)', function($table)
+{
+    $result = AutoSchema::drop($table);
+    return Redirect::back();
+});
+
+// Update a table based on a definition
+Route::get('autoschema/update/(:any)', function($table)
+{
+    $result = AutoSchema::update_table($table);
+    return Redirect::back();
+});
+ ```
+
+## Core functions
+
+### Loading definitions
+Load in and cache any definitions in your **config/autoschema.php** file.
+```php AutoSchema::load_definitions(); ```
+
+### Creating tables
+Create a table as defined in your **config/autoschema.php** file
+```php AutoSchema::create($table_name); ```
+
+### Droping tables
+Drop a table from the database.
+```php AutoSchema::drop($table_name); ```
+
+### Updating tables
+Update a table in the database using the definition in your **config/autoschema.php** file
+```php AutoSchema::create($table_name); ```
+
+
+## Helper functions
+
+### Retrieving definitions to build a form
+```php AutoSchema::get_for_form($table, $showall=false); ```
+This function will return an array of field definitions to be used with laravels form methods.
+
+#### Example
+```php
+$fields = AutoSchema::get_for_form('users');
+$html = '';
+foreach($fields as $field){
+    $html .= '&lt;p class="field"&gt;';
+    $html .= Form::label($field['label']);
+    $html .= Form::input($field['type'], $field['name']);
+    $html .= '&lt;/p&gt;';
+}
+echo $html;
 ```
