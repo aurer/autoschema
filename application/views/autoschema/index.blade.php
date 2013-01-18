@@ -30,10 +30,11 @@
 							<li>{{ $error }}</li>
 						@endforeach
 					</ol>
-					<div class="action">
+					
+				@endif
+				<div class="action">
 						<a href="{{ URI::current() }}/update/{{ $table['name'] }}">Update database</a>
 					</div>
-				@endif
 			</li>
 		@endforeach
 		</ul>

@@ -11,6 +11,13 @@ Route::get('/', function()
 	return View::make('home.index');
 });
 
+Route::get('/form', function()
+{
+	$data['fields'] = AutoSchema::get_for_form('users');
+	//return print_r($data['fields']);
+	return View::make('form.index')->with($data);
+});
+
 Route::get('/autoschema', function()
 {
 	AutoSchema::load_definitions();
