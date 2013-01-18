@@ -4,6 +4,7 @@ use \Laravel\Log as Log;
 use \Laravel\Config as Config;
 use \Laravel\Cache as Cache;
 use \Laravel\Request as Request;
+use \Laravel\Database as DB;
 
 class AutoSchema
 {
@@ -98,18 +99,42 @@ class AutoSchema
 
 		$schema = static::get($table, $showall);
 		if( !$schema ) return false;
-		foreach ($schema['columns'] as $column) {
+		foreach ($schema['columns'] as $key => $column) {
 			$column['type'] = $typecast_html[$column['type']];
+			
+			// Build values array
+			if( isset($column['values']) ){
+				$values = $column['values'];
+				if( is_array($values) ){
+					$column['type'] = 'select';
+				}
+				// Should we get values from a specified table e.g. 'table:column1,column2'
+				elseif( preg_match('/^([a-z_]+):([a-z_0-9]+),?([a-z_0-9]+)?$/', $values, $matches) ){
+					$table = $matches[1];
+					$col1 = $matches[2];
+					$col2 = isset($matches[3]) ? $matches[3] : null;
+					$result = isset($matches[3]) ? DB::query("SELECT $col1, $col2 FROM $table") : DB::query("SELECT $col1 FROM $table");
+
+					$column['type'] = 'select';
+					$column['values'] = array();
+					foreach ($result as $key => $value) {
+						if( $col2 ) $column['values'][$value->$col1] = $value->$col2;
+						else $column['values'][$key] = $value->$col1;
+					}
+					$column['values'];
+				}
+			}
+
 			if( ! $showall ){
 				if ( ! in_array($column['name'], static::$hidden_columns ) ){
-					$columns[] = $column;
+					$columns[$key] = $column;
 				}
 			} else {
-				$columns[] = $column;
+				$columns[$key] = $column;
 			}
 		}
-		$schema['columns'] = $columns;
-		return $table;
+		
+		return $columns;
 	}
 
 	/**
