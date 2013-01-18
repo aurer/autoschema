@@ -3,7 +3,7 @@
 @section('pagetitle') Form @endsection
 
 @section('main')
-	
+	<h3><a href="/">&larr; Back</a></h3>
 	@foreach($fields as $field)
 
 		<p class="field type-{{ $field['type'] }}">

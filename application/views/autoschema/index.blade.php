@@ -3,7 +3,7 @@
 @section('pagetitle') Tables @endsection
 
 @section('main')
-	
+	<h3><a href="/">&larr; Back</a></h3>
 	<div class="autoschema">
 		<ul class="tables">
 		@foreach($tables as $table)

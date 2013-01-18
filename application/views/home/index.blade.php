@@ -5,6 +5,7 @@
 @section('main')
 	
 	<p>Some copy about AutoSchema...</p>
-	<p><a href="/autoschema">Go to AutoSchema</a></p>
+	<h3><a href="/autoschema">AutoSchema manager &rarr;</a></h3>
+	<h3><a href="/form">AutoSchema form &rarr;</a></h3>
 
 @endsection
