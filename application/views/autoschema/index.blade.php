@@ -3,41 +3,35 @@
 @section('pagetitle') Tables @endsection
 
 @section('main')
-	<h3><a href="/">&larr; Back</a></h3>
-	<div class="autoschema">
-		<ul class="tables">
+
+	<h3 class="inner"><a href="/">&larr; Back</a></h3>
+	
+	<table class="layout autoschema">
 		@foreach($tables as $table)
-			<li class="valid-{{ $table['valid'] ? 'true' : 'false' }} {{ $table['error'] }}">
-				<h3>{{ $table['name'] }}</h3>
-				@if( $table['error'] == 'missing_from_database')
-					<h4>Errors</h4>
-					<ol><li>This table is not in the database yet </li></ol>
-					<div class="action">
-						<a href="{{ URI::current() }}/create/{{ $table['name'] }}">Create</a>
-					</div>
+			<tr class="{{ $table->error_type }}">
+				<th>{{ $table->name }}</th>
+				@if( $table->valid )
+					<td class="details"></td>
+					<td class="action">
+						<a class="btn" href="{{ URI::current() }}/update/{{ $table->name }}">Refresh</a>
+					</td>
+				@else
+					<td class="details">
+						<h4>Errors</h4>
+						{{ HTML::ol($table->errors) }}
+					</td>
+					<td class="action">
+						@if( $table->error_type == 'missing_from_database' )
+							<a class="btn btn-green" href="{{ URI::current() }}/create/{{ $table->name }}">Create</a>
+						@elseif( $table->error_type == 'missing_from_definition' )
+							<a class="btn btn-red" href="{{ URI::current() }}/drop/{{ $table->name }}">Drop</a>
+						@else
+							<a class="btn" href="{{ URI::current() }}/update/{{ $table->name }}">Update</a>
+						@endif	
+					</td>
 				@endif
-				@if( $table['error'] == 'missing_from_definition')
-					<h4>Errors</h4>
-					<ol><li>This table is not in the schema definition</li></ol>
-					<div class="action">
-						<a href="{{ URI::current() }}/drop/{{ $table['name'] }}">Drop</a>
-					</div>
-				@endif
-				@if( count($table['schema_errors']) )
-					<h4>Errors</h4>
-					<ol>
-						@foreach( $table['schema_errors'] as $error)
-							<li>{{ $error }}</li>
-						@endforeach
-					</ol>
-					
-				@endif
-				<div class="action">
-						<a href="{{ URI::current() }}/update/{{ $table['name'] }}">Update database</a>
-					</div>
-			</li>
+			</tr>
 		@endforeach
-		</ul>
-	</div>
+	</table>
 
 @endsection

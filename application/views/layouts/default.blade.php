@@ -5,19 +5,28 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 	<title>AutoSchema:@yield('pagetitle')</title>
 	<meta name="viewport" content="width=device-width">
-	{{ HTML::style('laravel/css/style.css') }}
 	{{ HTML::style('css/main.css') }}
 </head>
 <body>
-	<div class="wrapper">
+	<div class="page">
 		<header>
-			<h1>Laravel AutoSchema</h1>
-			<h2>A Database Management Library</h2>
+			<div class="col">
+				<div class="inner">
+					<h1>AutoSchema</h1>
+					<h2>A Laravel Database Management Library</h2>
+				</div>
+			</div>
 		</header>
 		<div role="main" class="main">
-			<h2>@yield('pagetitle')</h2>
-			@yield('main')
+			<div class="col">
+				<h2 class="inner">@yield('pagetitle')</h2>
+				@yield('main')
+			</div>
 		</div>
+		<footer>
+			<div class="col">
+			</div>
+		</footer>
 	</div>
 </body>
 </html>
