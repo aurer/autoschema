@@ -69,7 +69,7 @@ class AutoSchema
 	{
 		$tables = Cache::get('autoschema_schema');
 		if( array_key_exists($table, $tables) ){
-			return $tables[$table];
+			return new Table($tables[$table]);
 		} else {
 			Log::notice("AutoSchema: the '$table' table is not defined");
 			return false;
@@ -97,9 +97,9 @@ class AutoSchema
 			'blob' 		=> 'file',
 		);
 
-		$schema = static::get($table, $showall);
+		$schema = static::get($table);
 		if( !$schema ) return false;
-		foreach ($schema['columns'] as $key => $column) {
+		foreach ($schema->columns as $key => $column) {
 			$column['type'] = $typecast_html[$column['type']];
 			
 			// Build values array
@@ -145,54 +145,50 @@ class AutoSchema
 	 */
 	public static function check_tables()
 	{
-		$database = static::tables_in_database();
+		$database 	= static::tables_in_database();
 		$definition = static::tables_in_definition();
-		$tables = array('in_definition'=>array(), 'in_database'=>array(), 'in_both'=>array());
-		foreach ($definition as $value) {
-			if( !in_array($value, $database) ){
-				$tables['in_definition'][] = $value;
-			} else {
-				$tables['in_both'][] = $value;
-			}
-		}
-		foreach ($database as $value) {
-			if( !in_array($value, $definition) ){
-				$tables['in_database'][] = $value;
-			}
-		}
+		$result 	= array();
+		
+		// Work out which tables are where
+		$in_both 			= array_intersect($definition, $database); // tables in both the definition and database
+		$just_definition 	= array_diff($definition, $database); // tables only in the definition
+		$just_database 		= array_diff($database, $definition); // tables only in the database		
+		$all_tables 		= array_merge($in_both, $just_definition, $just_database);
+		sort($all_tables);
 
-		$merged = array_merge($tables['in_definition'], $tables['in_database'], $tables['in_both']);
-		$result = array();
-		foreach ($merged as $key => $table) {
-			$result[$key]['schema_errors'] 	= array();
-			$result[$key]['name'] 			= $table;
-			$result[$key]['valid'] 			= true;
-			$result[$key]['error'] 			= '';
+		foreach ($all_tables as $key => $table) {
+			$obj 				= new \stdClass();
+			$obj->name 			= $table;
+			$obj->valid 		= true;
+			$obj->errors 		= array();
+			$obj->error_type	= '';
 
-			if( in_array($table, $tables['in_definition']) ){
-				$result[$key]['name'] = $table;
-				$result[$key]['valid'] = false;
-				$result[$key]['error'] = 'missing_from_database';
+			if( in_array($table, $just_definition) ){
+				$obj->valid 		= false;
+				$obj->errors[] 		= 'This table does not exist yet.';
+				$obj->error_type 	= 'missing_from_database';
 			}
-			elseif( in_array($table, $tables['in_database']) ){
-				$result[$key]['name'] = $table;
-				$result[$key]['valid'] = false;
-				$result[$key]['error'] = 'missing_from_definition';
+			elseif( in_array($table, $just_database) ){
+				$obj->valid 		= false;
+				$obj->errors[] 		= 'This table has not defined in the site.';
+				$obj->error_type 	= 'missing_from_definition';
 			}
 			
 			// If we have errors, there's no need to check the table so we continue.
-			if( !$result[$key]['valid'] ){
-				continue;	
+			if( !$obj->valid ){
+				$result[] = $obj;
+				continue;
 			}
 
 			// Check the table columns for changes 
-			$result[$key]['schema_errors'] = static::table($table)->check();
-			if( count($result[$key]['schema_errors']) > 0){
-				$result[$key]['valid'] = false;
-				$result[$key]['error'] = 'schema_error';
+			$errors = static::table($table)->check();
+			if( count($errors) > 0){
+				$obj->errors 		= $errors;
+				$obj->valid 		= false;
+				$obj->error_type 	= 'schema_error';
 			}
+			$result[] = $obj;
 		}
-		sort($result);
 		return $result;
 	}
 
@@ -201,27 +197,6 @@ class AutoSchema
 		$definition = static::get($table);
 		return new Table($definition);
 	}
-
-	/*public static function check_table($table)
-	{
-		$database = static::columns_in_table($table);
-		$definition = static::columns_in_definition($table);
-		$errors = array();
-		foreach ($definition as $key => $value) {
-			if( !array_key_exists($key, $database) ){
-				$errors['missing_in_database'][] = $key;
-			}
-			elseif( $value != $database[$key] ){
-				$errors['changed'][] = $key;
-			}
-		}
-		foreach ($database as $key => $value) {
-			if( !array_key_exists($key, $definition) ){
-				$errors['missing_in_definition'][] = $key;
-			}
-		}
-		return $errors;
-	}*/
 
 	/**
 	 * Cache the AutoSchema definitions.
@@ -255,18 +230,21 @@ class AutoSchema
 	 * @return array
 	 */
 	public static function columns_in_definition($table)
-	{
+	{		
 		$columns = array();
-		$schema = static::get($table, true);
+		$schema = static::get($table);
+		
 		if( !$schema ) return false;
 
-		foreach ($schema['columns'] as $column) {
+		
+		foreach ($schema->columns as $column) {
 			$name = $column['name'];
 			$length = isset($column['length']) ? $column['length'] : '';
 			$type = $column['type'];
 			$columns[$name] = trim("$name $type $length");
 		}
 		return $columns;
+		
 	}
 
 	/**
@@ -278,11 +256,19 @@ class AutoSchema
 	public static function driver()
 	{
 		$driver = Config::get('database.default');
-		if( $driver === 'mysql' ){
+		if( in_array($driver, array('mysql', 'pgsql') ) ){
+			switch ($driver) {
+				case 'mysql':
+					return new Drivers\MySQL;
+					break;
+				case 'pgsql':
+					return new Drivers\Postgres;
+					break;
+			}
 			return new Drivers\MySql;
 		} else {
-			Log::error('AutoSchema: only mysql databases are supported at the moment.');
-			exit('AutoSchema: only mysql databases are supported at the moment, please set your database driver to "mysql".');	
+			Log::error('AutoSchema: only mysql and pgsql databases are supported at the moment.');
+			exit('AutoSchema: only mysql and pgsql databases are supported at the moment.');	
 		} 
 	}
 

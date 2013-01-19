@@ -13,21 +13,42 @@ Route::get('/', function()
 
 Route::get('/form', function()
 {
-	$data['fields'] = AutoSchema::get_for_form('users');
-	//return print_r($data['fields']);
+	if( Input::get('table') ){
+		$data['fields'] = AutoSchema::get_for_form(Input::get('table'));
+	} else {
+		$data['fields'] = array();
+	}
+	
 	return View::make('form.index')->with($data);
+});
+
+Route::post('/form', function()
+{
+	$fields = AutoSchema::get_for_form('users');
+	
+	foreach ($fields as $key => $value) {
+		$data[$value['name']] = Input::get($value['name']);
+	}
+
+	//print_r($data);
+	$result = DB::table('users')->insert($data);
 });
 
 Route::get('/autoschema', function()
 {
 	AutoSchema::load_definitions();
 	$data['tables'] = AutoSchema::check_tables();
+	/*foreach ($data['tables'] as $key => $value) {
+		echo $value->name;
+	}*/
+	//return print_r($data['tables'], true);
 	return View::make('autoschema.index')->with($data);
 });
 
 Route::get('autoschema/create/(:any)', function($table)
 {
 	$result =AutoSchema::create($table);
+	//return $result;
 	return Redirect::back();
 });
 

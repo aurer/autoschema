@@ -5,18 +5,18 @@ use \Laravel\Database as DB;
 use \Laravel\Config as Config;
 use \Laravel\Log as Log;
 
-class MySql extends Driver {
+class MySQL extends Driver {
 
 	public static function create($table)
 	{
 		$schema = AutoSchema::get($table);
 		if( !$schema ) return false;
 
-		$command = "CREATE TABLE IF NOT EXISTS " . $schema['name'] . " (\n";
-			foreach ($schema['columns'] as $column) {
+		$command = "CREATE TABLE IF NOT EXISTS " . $schema->name . " (\n";
+			foreach ($schema->columns as $column) {
 				$command .= "\t" . static::column_definition($column) . ",\n";
 			}
-		$command .= "\tPRIMARY KEY (" . $schema['primary_key'] . ")\n";
+		$command .= "\tPRIMARY KEY (" . $schema->primary_key . ")\n";
 		$command .= ");\n";
 		return DB::query($command);
 	}
@@ -141,7 +141,7 @@ class MySql extends Driver {
 		
 		// Alter table stamements
 		
-		foreach ($schema['columns'] as $column) {
+		foreach ($schema->columns as $column) {
 			$definition = $this->column_definition($column);
 			if( !array_key_exists($column['name'], $columns_in_table) ){
 				$alter_statements[] = "$alter_table ADD $definition $after_previous_column;";
@@ -160,10 +160,10 @@ class MySql extends Driver {
 		}
 		
 		
-		if( $table_pk && !$schema['primary_key'] != $table_pk ){
+		if( $table_pk && !$schema->primary_key != $table_pk ){
 			$alter_statements[] = "$alter_table MODIFY $pk_definition;";
 			$alter_statements[] = "$alter_table DROP PRIMARY KEY;";
-			$alter_statements[] = "$alter_table ADD PRIMARY KEY({$schema['primary_key']});";
+			$alter_statements[] = "$alter_table ADD PRIMARY KEY({$schema->primary_key});";
 		}
 		
 		Log::AutoSchema("Updating $table");

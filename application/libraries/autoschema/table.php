@@ -4,19 +4,20 @@ use \AutoSchema\AutoSchema as AutoSchema;
 
 class Table
 {
-	protected $definition;
-	protected $errors = array();
-
 	function __construct($definition)
 	{
-		$this->definition = $definition;
+		foreach ($definition as $key => $value){
+			$this->$key = $value;
+		}
+		$this->errors = array();
 		return $this;
 	}
 
 	public function check()
 	{
-		$columns_in_definition = AutoSchema::columns_in_definition($this->definition['name']);
-		$columns_in_table = AutoSchema::columns_in_table($this->definition['name']);
+		$columns_in_definition 	= AutoSchema::columns_in_definition($this->name);
+		$columns_in_table 		= AutoSchema::columns_in_table($this->name);
+		
 		foreach ($columns_in_definition as $key => $value) {
 			// Column isn't in database
 			if( !array_key_exists($key, $columns_in_table) ){
@@ -37,4 +38,14 @@ class Table
 		}
 		return $this->errors;
 	}
+
+	public function __set($item, $value){
+		return $this->$item = $value;
+	}
+
+	public function __get($item){
+		if( isset($this->$item)){
+			return $this->$item;
+		}
+	}	
 }
