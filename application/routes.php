@@ -25,12 +25,9 @@ Route::get('/form', function()
 Route::post('/form', function()
 {
 	$fields = AutoSchema::get_for_form('users');
-	
 	foreach ($fields as $key => $value) {
 		$data[$value['name']] = Input::get($value['name']);
 	}
-
-	//print_r($data);
 	$result = DB::table('users')->insert($data);
 });
 
@@ -38,27 +35,45 @@ Route::get('/autoschema', function()
 {
 	AutoSchema::load_definitions();
 	$data['tables'] = AutoSchema::check_tables();
-	/*foreach ($data['tables'] as $key => $value) {
-		echo $value->name;
-	}*/
-	//return print_r($data['tables'], true);
+	$data['views'] = AutoSchema::check_views();
 	return View::make('autoschema.index')->with($data);
 });
 
-Route::get('autoschema/create/(:any)', function($table)
+Route::get('/autoschema/views', function()
 {
-	$result =AutoSchema::create($table);
+	AutoSchema::load_definitions();
+	print_r( AutoSchema::get_views() );
+});
+
+Route::get('autoschema/create_view/(:any)', function($definition)
+{
+	
+	return print_r(AutoSchema::define_view('users_vw', function($view){
+		$view->definition("SELECT u.* FROM users u 
+		LEFT JOIN bills38 b 
+			ON b.user_id = u.id
+		LEFT JOIN emails e
+			on e.user_id = b.user_id
+		WHERE active = 1 AND u.id BETWEEN 1 AND 40");
+		$view->depends_on('emails', 'users', 'bills21');
+	})
+	);
+});
+
+Route::get('autoschema/create_table/(:any)', function($table)
+{
+	$result =AutoSchema::create_table($table);
 	//return $result;
 	return Redirect::back();
 });
 
-Route::get('autoschema/drop/(:any)', function($table)
+Route::get('autoschema/drop_table/(:any)', function($table)
 {
-	$result = AutoSchema::drop($table);
+	$result = AutoSchema::drop_table($table);
 	return Redirect::back();
 });
 
-Route::get('autoschema/update/(:any)', function($table)
+Route::get('autoschema/update_table/(:any)', function($table)
 {
 	$result = AutoSchema::update_table($table);
 	return Redirect::back();

@@ -7,7 +7,7 @@ use \Laravel\Log as Log;
 
 class MySQL extends Driver {
 
-	public static function create($table)
+	public static function create_table($table)
 	{
 		$schema = AutoSchema::get($table);
 		if( !$schema ) return false;
@@ -21,8 +21,12 @@ class MySQL extends Driver {
 		return DB::query($command);
 	}
 
-	public static function drop($table)
-	{
+	public static function drop_table($table)
+	{	
+		// Don't drop it, if it's in the definitions
+		$schema = AutoSchema::get($table);
+		if( $schema ) return false;
+
 		$command = "DROP TABLE IF EXISTS " . $table . "\n";
 		return DB::query($command);
 	}
@@ -171,5 +175,10 @@ class MySQL extends Driver {
 			Log::AutoSchema("$statement");
 			if( !DB::query($statement) ) break;
 		}
+	}
+
+	public function create_view($definition)
+	{
+		return $definition;
 	}
 }

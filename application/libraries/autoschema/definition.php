@@ -83,7 +83,6 @@ class Definition
 	public function timestamps()
 	{
 		$this->date('created_at');
-
 		$this->date('updated_at');
 	}
 
@@ -117,15 +116,19 @@ class Definition
 		return $this;
 	}
 
-	public function attributes($arg)
-	{	
-		$col = array_pop($this->columns);
-		
-		foreach ($arg as $key => $value) {
-			$col[$key] = $value;
+	/**
+	 * Create an extra attribute to the table definition.
+	 *
+	 * @param  mixed   $parameters
+	 * @return Definition
+	 */
+	public function __call($name, $args)
+	{
+		if( !in_array($name, array('columns', 'name', 'primary_key')) ){
+			$col = array_pop($this->columns);
+			$col[$name] = $args[0];
+			$this->columns[] = $col;
 		}
-		
-		$this->columns[] = $col;
 		return $this;
 	}
 

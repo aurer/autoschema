@@ -39,38 +39,11 @@ AutoSchema::define('emails', function($table)
     $table->timestamps();
 });
 
-AutoSchema::define('bills2', function($table)
-{
-    $table->increments('id');
-    $table->integer('user_id');
-    $table->string('title');
-    $table->string('name');
-    $table->text('comments');
-    $table->string('amount');
-    $table->string('recurrence'); // Weekly, Monthly or Yearly
-    $table->integer('renews_on'); // Weekly = day of week, Monthly/Yearly = day of year
-    $table->boolean('send_reminder'); // Should an email reminder be sent
-    $table->integer('reminder'); // How many days before renewal to send reminder
-    $table->boolean('include_in_totals');
-    $table->timestamps();
+AutoSchema::define_view('users_vw', function($view){
+    $view->definition("SELECT * FROM users where active = 1");
 });
 
-AutoSchema::define('bills3', function($table)
-{
-    $table->increments('id');
-    $table->integer('user_id');
-    $table->string('title');
-    $table->string('name');
-    $table->text('comments');
-    $table->string('amount');
-    $table->string('recurrence'); // Weekly, Monthly or Yearly
-    $table->integer('renews_on'); // Weekly = day of week, Monthly/Yearly = day of year
-    $table->boolean('send_reminder'); // Should an email reminder be sent
-    $table->integer('reminder'); // How many days before renewal to send reminder
-    $table->boolean('include_in_totals');
-    $table->timestamps();
-});
-
+/*
 for($i=0; $i<60; $i++){
     AutoSchema::define('bills'.$i, function($table)
     {
@@ -119,3 +92,4 @@ for($i=0; $i<60; $i++){
         $table->timestamps();
     });
 }
+*/

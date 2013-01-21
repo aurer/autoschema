@@ -9,6 +9,7 @@ use \Laravel\Database as DB;
 class AutoSchema
 {
 	protected static $tables = array();
+	protected static $views = array();
 	protected static $hidden_columns = array('id', 'created_at', 'updated_at');
 	
 	/**
@@ -24,6 +25,21 @@ class AutoSchema
 		call_user_func($callback, $table = new Definition($table));
 		static::$tables[$name] = $table->as_array();
 		return $table;
+	}
+
+	/**
+	 * Define an AutoSchema view.
+	 *
+	 * @param  string 	 $table
+	 * @param  function  $callback
+	 * @return Definition
+	 */
+	public static function define_view($view, $callback)
+	{
+		$name = $view;
+		call_user_func($callback, $view = new View($view));
+		static::$views[$name] = $view;
+		return $view;
 	}
 
 	/**
@@ -57,6 +73,16 @@ class AutoSchema
 	public static function tables_in_definition()
 	{
 		return array_keys( static::get_definitions() );
+	}
+
+	/**
+	 * Get the view names from the cached definitions.
+	 *
+	 * @return string
+	 */
+	public static function views_in_definition()
+	{
+		return array_keys( static::get_views() );
 	}
 	
 	/**
@@ -192,9 +218,21 @@ class AutoSchema
 		return $result;
 	}
 
+	public static function check_views()
+	{
+		//$database 	= static::tables_in_database();
+		$definition = static::views_in_definition();
+		$result 	= array();
+		return $definition;
+	}
+
 	public static function table($table)
 	{
 		$definition = static::get($table);
+		foreach ($definition as $key => $value) {
+			$obj = new \stdClass;
+			$obj->name = $value;
+		}
 		return new Table($definition);
 	}
 
@@ -211,6 +249,8 @@ class AutoSchema
 		}
 		Cache::forget('autoschema_schema');
 		Cache::forever('autoschema_schema', static::$tables);
+		Cache::forget('autoschema_schema_views');
+		Cache::forever('autoschema_schema_views', static::$views);
 	}
 
 	/**
@@ -221,6 +261,16 @@ class AutoSchema
 	public static function get_definitions()
 	{
 		return Cache::get('autoschema_schema');
+	}
+
+	/**
+	 * Get the cached AutoSchema definitions.
+	 *
+	 * @return array
+	 */
+	public static function get_views()
+	{
+		return Cache::get('autoschema_schema_views');
 	}
 
 	/**
