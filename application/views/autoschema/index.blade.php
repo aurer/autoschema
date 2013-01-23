@@ -2,14 +2,13 @@
 
 @section('main')
 	<h3 class="inner"><a href="/">&larr; Back</a></h3>
-	<h2>Tables</h2>
+	<h2 class="inner">Tables</h2>
 	<table class="layout autoschema">
 		@foreach($tables as $table)
 			<tr class="{{ $table->error_type }}">
-				<th>{{ $table->name }}</th>
+				<th class="name">{{ $table->name }}</th>
 				@if( $table->valid )
-					<td class="details"></td>
-					<td class="action">
+					<td colspan="2" class="action">
 						<a class="btn" href="/autoschema/update_table/{{ $table->name }}">Refresh</a>
 					</td>
 				@else
@@ -31,11 +30,30 @@
 		@endforeach
 	</table>
 
-	<h2>Views</h2>
+	<h2 class="inner">Views</h2>
 	<table class="layout autoschema">
 		@foreach( $views as $view )
 			<tr>
-				<th>{{ $view }}</th>
+				<th class="name">{{ $view->name }}</th>
+				@if( $view->valid )
+					<td colspan="2" class="action">
+						<a class="btn" href="/autoschema/update_view/{{ $view->name }}">Refresh</a>
+					</td>
+				@else
+					<td class="details">
+						<h4>Errors</h4>
+						{{ HTML::ol($view->errors) }}
+					</td>
+					<td class="action">
+						@if( $view->error_type == 'missing_from_database' )
+							<a class="btn btn-green" href="/autoschema/create_view/{{ $view->name }}">Create</a>
+						@elseif( $view->error_type == 'missing_from_definition' )
+							<a class="btn btn-red" href="/autoschema/drop_view/{{ $view->name }}">Drop</a>
+						@else
+							<a class="btn" href="/autoschema/update_view{{ $view->name }}">Update</a>
+						@endif	
+					</td>
+				@endif
 			</tr>
 		@endforeach
 	</table>

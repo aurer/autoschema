@@ -62,11 +62,16 @@ table.autoschema{
 table.autoschema th,
 table.autoschema td{
     border-top: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
     padding: 1em;
 }
-table.autoschema .details{
-    border-left: 1px solid #ddd;
-    border-right: 1px solid #ddd;
+table.autoschema th.name{
+	border-right: 1px solid #ddd;
+	width: 20%;
+}
+table:last-child th,
+table:last-child td{
+	border-bottom: none;
 }
 table.autoschema h4{
     float: left;

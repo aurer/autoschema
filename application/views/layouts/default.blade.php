@@ -19,7 +19,6 @@
 		</header>
 		<div role="main" class="main">
 			<div class="col">
-				<h2 class="inner">@yield('pagetitle')</h2>
 				@yield('main')
 			</div>
 		</div>
