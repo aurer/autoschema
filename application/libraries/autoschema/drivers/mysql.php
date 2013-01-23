@@ -9,7 +9,7 @@ class MySQL extends Driver {
 
 	public static function create_table($table)
 	{
-		$schema = AutoSchema::get($table);
+		$schema = AutoSchema::get_table_definition($table);
 		if( !$schema ) return false;
 
 		$command = "CREATE TABLE IF NOT EXISTS " . $schema->name . " (\n";
@@ -18,16 +18,39 @@ class MySQL extends Driver {
 			}
 		$command .= "\tPRIMARY KEY (" . $schema->primary_key . ")\n";
 		$command .= ");\n";
+		Log::AutoSchema($command);
+		return DB::query($command);
+	}
+
+	public function create_view($name)
+	{
+		$schema = AutoSchema::get_view_definition($name);
+		if( !$schema ) return false;
+
+		$command = "CREATE OR REPLACE VIEW " . $schema->name . " AS " . $schema->definition . "\n";
+		Log::AutoSchema($command);
 		return DB::query($command);
 	}
 
 	public static function drop_table($table)
 	{	
 		// Don't drop it, if it's in the definitions
-		$schema = AutoSchema::get($table);
+		$schema = AutoSchema::get_table_definition($table);
 		if( $schema ) return false;
 
 		$command = "DROP TABLE IF EXISTS " . $table . "\n";
+		Log::AutoSchema($command);
+		return DB::query($command);
+	}
+
+	public static function drop_view($view)
+	{	
+		// Don't drop it, if it's in the definitions
+		$schema = AutoSchema::get_view_definition($view);
+		if( $schema ) return false;
+
+		$command = "DROP VIEW IF EXISTS " . $view . "\n";
+		Log::AutoSchema($command);
 		return DB::query($command);
 	}
 
@@ -84,6 +107,18 @@ class MySQL extends Driver {
 		return $tables;
 	}
 
+	public static function views_in_database()
+	{	
+		$views = array();
+		$database = Config::get('database.connections');
+		$command = "SELECT table_name, table_rows, data_length, auto_increment FROM information_schema.tables WHERE TABLE_TYPE = 'VIEW' AND TABLE_SCHEMA = ?";
+		$result = DB::query($command, array($database['mysql']['database']));
+		foreach ($result as $view) {
+			$views[] = $view->table_name;
+		}	
+		return $views;
+	}
+
 	/**
 	 * Return the columns for a given table.
 	 *
@@ -128,7 +163,7 @@ class MySQL extends Driver {
 		$table_pk 				= DB::first("SHOW INDEX FROM $table")->column_name;
 		$columns_in_definition 	= AutoSchema::columns_in_definition($table);
 		$columns_in_table 		= $this->columns_in_table($table);
-		$schema 				= AutoSchema::get($table);
+		$schema 				= AutoSchema::get_table_definition($table);
 		$alter_table 			= "ALTER TABLE $table";
 		$pk_definition			= "";
 		$alter_statements 		= array();
@@ -177,8 +212,11 @@ class MySQL extends Driver {
 		}
 	}
 
-	public function create_view($definition)
+	public function update_view($view)
 	{
-		return $definition;
+		$command = "DROP VIEW IF EXISTS $view";
+		$result = DB::query($command);
+		Log::AutoSchema($command);
+		return $this->create_view($view);
 	}
 }

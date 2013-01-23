@@ -19,12 +19,10 @@ class AutoSchema
 	 * @param  function  $callback
 	 * @return Definition
 	 */
-	public static function define($table, $callback)
+	public static function table($name, $callback)
 	{
-		$name = $table;
-		call_user_func($callback, $table = new Definition($table));
-		static::$tables[$name] = $table->as_array();
-		return $table;
+		call_user_func($callback, static::$tables[$name] = new Table($name));
+		return static::$tables[$name];
 	}
 
 	/**
@@ -34,12 +32,10 @@ class AutoSchema
 	 * @param  function  $callback
 	 * @return Definition
 	 */
-	public static function define_view($view, $callback)
+	public static function view($name, $callback)
 	{
-		$name = $view;
-		call_user_func($callback, $view = new View($view));
-		static::$views[$name] = $view;
-		return $view;
+		call_user_func($callback, static::$views[$name] = new View($name));
+		return static::$views[$name];
 	}
 
 	/**
@@ -57,7 +53,6 @@ class AutoSchema
 		foreach ($paths as $path) {
 			if( is_file( $path . 'autoschema' . EXT ) ){
 				$configs += 1;
-				// Run all the autoschema define statements to put the schemas into static::$tables;
 				require $path . 'autoschema' . EXT;
 			}
 		}
@@ -72,32 +67,57 @@ class AutoSchema
 	 */
 	public static function tables_in_definition()
 	{
-		return array_keys( static::get_definitions() );
+		if( is_array(static::get_definitions()->tables) ){
+			return array_keys( static::get_definitions()->tables );
+		}
+		return false;
 	}
 
 	/**
-	 * Get the view names from the cached definitions.
+	 * Get the table names from the cached definitions.
 	 *
 	 * @return string
 	 */
 	public static function views_in_definition()
 	{
-		return array_keys( static::get_views() );
+		if( is_array(static::get_definitions()->views) ){
+			return array_keys( static::get_definitions()->views );
+		}
+		return false;
 	}
 	
 	/**
-	 * Get a table schema.
+	 * Get a table definition.
 	 *
 	 * @param  string   $table
 	 * @return array
 	 */
-	public static function get($table)
+	public static function get_table_definition($table)
 	{
-		$tables = Cache::get('autoschema_schema');
+		$tables = Cache::get('autoschema_definitions');
 		if( array_key_exists($table, $tables) ){
-			return new Table($tables[$table]);
+			return $tables[$table];
+			//return new Table($tables[$table]);
 		} else {
 			Log::notice("AutoSchema: the '$table' table is not defined");
+			return false;
+		}
+	}
+
+	/**
+	 * Get a view definition.
+	 *
+	 * @param  string   $view
+	 * @return array
+	 */
+	public static function get_view_definition($view)
+	{
+		$views = Cache::get('autoschema_definitions');
+		if( array_key_exists($view, $views) ){
+			return $views[$view];
+			//return new Table($views[$view]);
+		} else {
+			Log::notice("AutoSchema: the '$view' view is not defined");
 			return false;
 		}
 	}
@@ -123,7 +143,7 @@ class AutoSchema
 			'blob' 		=> 'file',
 		);
 
-		$schema = static::get($table);
+		$schema = static::get_table_definition($table);
 		if( !$schema ) return false;
 		foreach ($schema->columns as $key => $column) {
 			$column['type'] = $typecast_html[$column['type']];
@@ -207,7 +227,7 @@ class AutoSchema
 			}
 
 			// Check the table columns for changes 
-			$errors = static::table($table)->check();
+			$errors = Table::check($table);
 			if( count($errors) > 0){
 				$obj->errors 		= $errors;
 				$obj->valid 		= false;
@@ -218,22 +238,53 @@ class AutoSchema
 		return $result;
 	}
 
+	/**
+	 * Return all views in cached definition as well as views in the database 
+	 * along with a 'valid' boolean and an error message about the status.
+	 *
+	 * @return array
+	 */
 	public static function check_views()
 	{
-		//$database 	= static::tables_in_database();
+		$database 	= static::views_in_database();
 		$definition = static::views_in_definition();
 		$result 	= array();
-		return $definition;
-	}
+		
+		// Work out which tables are where
+		$in_both 			= array_intersect($definition, $database); // tables in both the definition and database
+		$just_definition 	= array_diff($definition, $database); // tables only in the definition
+		$just_database 		= array_diff($database, $definition); // tables only in the database		
+		$all_views 			= array_merge($in_both, $just_definition, $just_database);
+		sort($all_views);
 
-	public static function table($table)
-	{
-		$definition = static::get($table);
-		foreach ($definition as $key => $value) {
-			$obj = new \stdClass;
-			$obj->name = $value;
+		foreach ($all_views as $key => $view) {
+			$obj 				= new \stdClass();
+			$obj->name 			= $view;
+			$obj->valid 		= true;
+			$obj->errors 		= array();
+			$obj->error_type	= '';
+
+			if( in_array($view, $just_definition) ){
+				$obj->valid 		= false;
+				$obj->errors[] 		= 'This view does not exist yet.';
+				$obj->error_type 	= 'missing_from_database';
+			}
+			elseif( in_array($view, $just_database) ){
+				$obj->valid 		= false;
+				$obj->errors[] 		= 'This view has not defined in the site.';
+				$obj->error_type 	= 'missing_from_definition';
+			}
+			
+			// If we have errors, there's no need to check the view so we continue.
+			if( !$obj->valid ){
+				$result[] = $obj;
+				continue;
+			}
+
+			$result[] = $obj;
 		}
-		return new Table($definition);
+
+		return $result;
 	}
 
 	/**
@@ -247,10 +298,7 @@ class AutoSchema
 			Log::error('AutoSchema: Cache failed: not table definitions found in AutoSchema::$tables.');
 			return false;
 		}
-		Cache::forget('autoschema_schema');
-		Cache::forever('autoschema_schema', static::$tables);
-		Cache::forget('autoschema_schema_views');
-		Cache::forever('autoschema_schema_views', static::$views);
+		Cache::forever('autoschema_definitions', array_merge(static::$tables, static::$views) );
 	}
 
 	/**
@@ -260,17 +308,16 @@ class AutoSchema
 	 */
 	public static function get_definitions()
 	{
-		return Cache::get('autoschema_schema');
-	}
-
-	/**
-	 * Get the cached AutoSchema definitions.
-	 *
-	 * @return array
-	 */
-	public static function get_views()
-	{
-		return Cache::get('autoschema_schema_views');
+		$definitions = Cache::get('autoschema_definitions');
+		$result = new \stdClass;
+		foreach ($definitions as $key => $value) {
+			if( get_class($value) === 'AutoSchema\View' ){
+				$result->views[$key ] = $value;
+			} else {
+				$result->tables[$key ] = $value;
+			}
+		}
+		return $result;
 	}
 
 	/**
@@ -282,7 +329,7 @@ class AutoSchema
 	public static function columns_in_definition($table)
 	{		
 		$columns = array();
-		$schema = static::get($table);
+		$schema = static::get_table_definition($table);
 		
 		if( !$schema ) return false;
 
