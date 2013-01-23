@@ -7,8 +7,8 @@ class View
 	function __construct($name)
 	{
 		$this->name = $name;
-		//$definition = AutoSchema::get_view_definition($name);
-		//return $definition ? $definition : $this;
+		$definition = AutoSchema::get_view_definition($name);
+		return $definition ? $definition : $this;
 	}
 
 	function definition($definition)
@@ -36,7 +36,7 @@ class View
 	protected function get_dependant_tables()
 	{
 		$tables = AutoSchema::tables_in_definition();
-		if($tables){
+		if( is_array($tables) ){
 			$definition = $this->definition;
 			$matches = array();
 			foreach ($tables as $key => $val) {

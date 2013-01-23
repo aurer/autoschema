@@ -67,8 +67,9 @@ class AutoSchema
 	 */
 	public static function tables_in_definition()
 	{
-		if( is_array(static::get_definitions()->tables) ){
-			return array_keys( static::get_definitions()->tables );
+		$definitions = static::get_definitions();
+		if( $definitions && is_array($definitions->tables) ){
+			return array_keys( $definitions->tables );
 		}
 		return false;
 	}
@@ -95,7 +96,7 @@ class AutoSchema
 	public static function get_table_definition($table)
 	{
 		$tables = Cache::get('autoschema_definitions');
-		if( array_key_exists($table, $tables) ){
+		if( is_array($tables) && array_key_exists($table, $tables) ){
 			return $tables[$table];
 			//return new Table($tables[$table]);
 		} else {
@@ -113,7 +114,7 @@ class AutoSchema
 	public static function get_view_definition($view)
 	{
 		$views = Cache::get('autoschema_definitions');
-		if( array_key_exists($view, $views) ){
+		if( is_array($views) && array_key_exists($view, $views) ){
 			return $views[$view];
 			//return new Table($views[$view]);
 		} else {
@@ -309,15 +310,18 @@ class AutoSchema
 	public static function get_definitions()
 	{
 		$definitions = Cache::get('autoschema_definitions');
-		$result = new \stdClass;
-		foreach ($definitions as $key => $value) {
-			if( get_class($value) === 'AutoSchema\View' ){
-				$result->views[$key ] = $value;
-			} else {
-				$result->tables[$key ] = $value;
+		if( is_array($definitions) ){
+			$result = new \stdClass;
+			foreach ($definitions as $key => $value) {
+				if( get_class($value) === 'AutoSchema\View' ){
+					$result->views[$key ] = $value;
+				} else {
+					$result->tables[$key ] = $value;
+				}
 			}
+			return $result;
 		}
-		return $result;
+		return false;
 	}
 
 	/**
