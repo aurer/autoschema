@@ -7,8 +7,8 @@ class View
 	function __construct($name)
 	{
 		$this->name = $name;
-		//$this->errors = array();
-		return $this;
+		//$definition = AutoSchema::get_view_definition($name);
+		//return $definition ? $definition : $this;
 	}
 
 	function definition($definition)
@@ -28,17 +28,24 @@ class View
 		return $this;
 	}
 
+	public function check()
+	{
+
+	}
+
 	protected function get_dependant_tables()
 	{
 		$tables = AutoSchema::tables_in_definition();
-		$definition = $this->definition;
-		$matches = array();
-		foreach ($tables as $key => $val) {
-			if( strpos($definition, " $val ") ){
-				$matches[] = $tables[$key];
+		if($tables){
+			$definition = $this->definition;
+			$matches = array();
+			foreach ($tables as $key => $val) {
+				if( strpos($definition, " $val ") ){
+					$matches[] = $tables[$key];
+				}
 			}
+			$this->dependant_tables = $matches;
 		}
-		$this->dependant_tables = $matches;
 		return $this;
 	}
 }
