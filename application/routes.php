@@ -6,10 +6,59 @@
 |--------------------------------------------------------------------------
 */
 
+Route::get('test', function(){
+
+});
+
 Route::get('/', function()
 {
 	return View::make('home.index');
 });
+
+Route::get('/autoschema', function()
+{
+	AutoSchema::load_definitions();
+	$data['tables'] = AutoSchema::check_tables();
+	$data['views'] = AutoSchema::check_views();
+	return View::make('autoschema.index')->with($data);
+});
+
+Route::get('/autoschema/views', function()
+{
+	AutoSchema::load_definitions();
+	print_r( AutoSchema::get_views() );
+});
+
+Route::get('autoschema/create_table/(:any)', function($table)
+{
+	$result = AutoSchema::create_table($table);
+	return Redirect::back();
+});
+
+Route::get('autoschema/create_view/(:any)', function($name)
+{
+	$result =AutoSchema::create_view($name);
+	return Redirect::back();
+});
+
+Route::get('autoschema/drop_table/(:any)', function($table)
+{
+	$result = AutoSchema::drop_table($table);
+	return Redirect::back();
+});
+
+Route::get('autoschema/update_table/(:any)', function($table)
+{
+	$result = AutoSchema::update_table($table);
+	return Redirect::back();
+});
+
+Route::get('autoschema/update_view/(:any)', function($view)
+{
+	$result = AutoSchema::update_view($view);
+	return Redirect::back();
+});
+
 
 Route::get('/form', function()
 {
@@ -30,55 +79,6 @@ Route::post('/form', function()
 	}
 	$result = DB::table('users')->insert($data);
 });
-
-Route::get('/autoschema', function()
-{
-	AutoSchema::load_definitions();
-	$data['tables'] = AutoSchema::check_tables();
-	$data['views'] = AutoSchema::check_views();
-	return View::make('autoschema.index')->with($data);
-});
-
-Route::get('/autoschema/views', function()
-{
-	AutoSchema::load_definitions();
-	print_r( AutoSchema::get_views() );
-});
-
-Route::get('autoschema/create_view/(:any)', function($definition)
-{
-	
-	return print_r(AutoSchema::define_view('users_vw', function($view){
-		$view->definition("SELECT u.* FROM users u 
-		LEFT JOIN bills38 b 
-			ON b.user_id = u.id
-		LEFT JOIN emails e
-			on e.user_id = b.user_id
-		WHERE active = 1 AND u.id BETWEEN 1 AND 40");
-		$view->depends_on('emails', 'users', 'bills21');
-	})
-	);
-});
-
-Route::get('autoschema/create_table/(:any)', function($table)
-{
-	$result =AutoSchema::create_table($table);
-	//return $result;
-	return Redirect::back();
-});
-
-Route::get('autoschema/drop_table/(:any)', function($table)
-{
-	$result = AutoSchema::drop_table($table);
-	return Redirect::back();
-});
-
-Route::get('autoschema/update_table/(:any)', function($table)
-{
-	$result = AutoSchema::update_table($table);
-	return Redirect::back();
-});
-
 /*
 |--------------------------------------------------------------------------
 | Application 404 & 500 Error Handlers
