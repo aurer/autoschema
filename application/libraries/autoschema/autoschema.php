@@ -17,7 +17,7 @@ class AutoSchema
 	 *
 	 * @param  string 	 $table
 	 * @param  function  $callback
-	 * @return Definition
+	 * @return array
 	 */
 	public static function table($name, $callback)
 	{
@@ -30,7 +30,7 @@ class AutoSchema
 	 *
 	 * @param  string 	 $table
 	 * @param  function  $callback
-	 * @return Definition
+	 * @return array
 	 */
 	public static function view($name, $callback)
 	{
@@ -41,7 +41,7 @@ class AutoSchema
 	/**
 	 * Load any AutoSchema definitions.
 	 *
-	 * @return integer
+	 * @return array
 	 */
 	public static function load_definitions()
 	{	
@@ -63,7 +63,7 @@ class AutoSchema
 	/**
 	 * Get the table names from the cached definitions.
 	 *
-	 * @return string
+	 * @return array
 	 */
 	public static function tables_in_definition()
 	{
@@ -75,9 +75,9 @@ class AutoSchema
 	}
 
 	/**
-	 * Get the table names from the cached definitions.
+	 * Get the view names from the cached definitions.
 	 *
-	 * @return string
+	 * @return array
 	 */
 	public static function views_in_definition()
 	{
@@ -116,7 +116,6 @@ class AutoSchema
 		$views = Cache::get('autoschema_definitions');
 		if( is_array($views) && array_key_exists($view, $views) ){
 			return $views[$view];
-			//return new Table($views[$view]);
 		} else {
 			Log::notice("AutoSchema: the '$view' view is not defined");
 			return false;
@@ -124,9 +123,10 @@ class AutoSchema
 	}
 
 	/**
-	 * Get a table schema.
+	 * Get a table schema for use when generating form elements.
 	 *
 	 * @param  string   $table
+	 * @param  boolean  $showall
 	 * @return array
 	 */
 	public static function get_for_form($table, $showall=false)
@@ -185,8 +185,8 @@ class AutoSchema
 	}
 
 	/**
-	 * Return all tables in cached definition as well as table in the database 
-	 * along with a 'valid' boolean and an error message about the status.
+	 * Check for any differances between the table definitions and the tables in the database.
+	 * Return an array of tables along with a status and any errors
 	 *
 	 * @return array
 	 */
@@ -240,8 +240,8 @@ class AutoSchema
 	}
 
 	/**
-	 * Return all views in cached definition as well as views in the database 
-	 * along with a 'valid' boolean and an error message about the status.
+	 * Check for any differances between the view definitions and the views in the database
+	 * Return an array of views along with a status and any errors
 	 *
 	 * @return array
 	 */
@@ -251,10 +251,10 @@ class AutoSchema
 		$definition = static::views_in_definition();
 		$result 	= array();
 		
-		// Work out which tables are where
-		$in_both 			= array_intersect($definition, $database); // tables in both the definition and database
-		$just_definition 	= array_diff($definition, $database); // tables only in the definition
-		$just_database 		= array_diff($database, $definition); // tables only in the database		
+		// Work out which views are where
+		$in_both 			= array_intersect($definition, $database); // views in both the definition and database
+		$just_definition 	= array_diff($definition, $database); // views only in the definition
+		$just_database 		= array_diff($database, $definition); // views only in the database
 		$all_views 			= array_merge($in_both, $just_definition, $just_database);
 		sort($all_views);
 
@@ -275,16 +275,8 @@ class AutoSchema
 				$obj->errors[] 		= 'This view has not defined in the site.';
 				$obj->error_type 	= 'missing_from_definition';
 			}
-			
-			// If we have errors, there's no need to check the view so we continue.
-			if( !$obj->valid ){
-				$result[] = $obj;
-				continue;
-			}
-
 			$result[] = $obj;
 		}
-
 		return $result;
 	}
 
@@ -336,7 +328,6 @@ class AutoSchema
 		$schema = static::get_table_definition($table);
 		
 		if( !$schema ) return false;
-
 		
 		foreach ($schema->columns as $column) {
 			$name = $column['name'];
@@ -349,7 +340,7 @@ class AutoSchema
 	}
 
 	/**
-	 * Create a new driver instance.
+	 * Create a new driver instance based on the default database config.
 	 *
 	 * @param  string  $driver
 	 * @return Autoschema\Drivers\Driver
@@ -380,14 +371,4 @@ class AutoSchema
 	{
 		return call_user_func_array(array(static::driver(), $method), $parameters);
 	}
-
-	/*
-	public function __set($property, $value){
-
-	}
-
-	public function __get($property){
-
-	}
-	*/
 }
