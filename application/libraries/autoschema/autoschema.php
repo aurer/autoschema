@@ -71,7 +71,7 @@ class AutoSchema
 		if( $definitions && is_array($definitions->tables) ){
 			return array_keys( $definitions->tables );
 		}
-		return false;
+		return array();
 	}
 
 	/**
@@ -81,10 +81,10 @@ class AutoSchema
 	 */
 	public static function views_in_definition()
 	{
-		if( is_array(static::get_definitions()->views) ){
+		if( isset(static::get_definitions()->views) && is_array(static::get_definitions()->views) ){
 			return array_keys( static::get_definitions()->views );
 		}
-		return false;
+		return array();
 	}
 	
 	/**
