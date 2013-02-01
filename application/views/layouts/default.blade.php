@@ -11,8 +11,8 @@
 	<div class="page">
 		<header>
 			<div class="col">
-				<div class="inner">
-					<h1>AutoSchema</h1>
+				<div class="cell">
+					<h1><a href="/">AutoSchema</a></h1>
 					<h2>A Laravel Database Management Library</h2>
 				</div>
 			</div>
