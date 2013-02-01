@@ -100,7 +100,7 @@ class AutoSchema
 			return $tables[$table];
 			//return new Table($tables[$table]);
 		} else {
-			Log::notice("AutoSchema: the '$table' table is not defined");
+			Log::notice(__METHOD__ . ": the '$table' table is not defined.");
 			return false;
 		}
 	}
@@ -117,7 +117,7 @@ class AutoSchema
 		if( is_array($views) && array_key_exists($view, $views) ){
 			return $views[$view];
 		} else {
-			Log::notice("AutoSchema: the '$view' view is not defined");
+			Log::notice(__METHOD__ . ": the '$view' view is not defined");
 			return false;
 		}
 	}
@@ -288,7 +288,7 @@ class AutoSchema
 	public static function cache_definitions()
 	{
 		if( count(static::$tables) < 1 ){
-			Log::error('AutoSchema: Cache failed: not table definitions found in AutoSchema::$tables.');
+			Log::error(__METHOD__ . ': Cache failed: not table definitions found in AutoSchema::$tables.');
 			return false;
 		}
 		Cache::forever('autoschema_definitions', array_merge(static::$tables, static::$views) );
@@ -336,7 +336,28 @@ class AutoSchema
 			$columns[$name] = trim("$name $type $length");
 		}
 		return $columns;
+	}
+
+	/**
+	 * Return the columns for a given definition.
+	 *
+	 * @param  string 	$table
+	 * @return array
+	 */
+	public static function column_in_definition($table, $column_name)
+	{		
+		$columns = array();
+		$schema = static::get_table_definition($table);
 		
+		if( !$schema ) return array();
+
+		foreach ($schema->columns as $column) {
+			if( $column['name'] === $column_name ){
+				return $column;
+			}
+		}
+
+		return array();
 	}
 
 	/**
@@ -359,7 +380,7 @@ class AutoSchema
 			}
 			return new Drivers\MySql;
 		} else {
-			Log::error('AutoSchema: only mysql and pgsql databases are supported at the moment.');
+			Log::error(__METHOD__ . ': only mysql and pgsql databases are supported at the moment.');
 			exit('AutoSchema: only mysql and pgsql databases are supported at the moment.');	
 		} 
 	}
