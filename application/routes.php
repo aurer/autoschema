@@ -6,79 +6,37 @@
 |--------------------------------------------------------------------------
 */
 
+/*
 Route::get('test', function(){
 
 });
+
+Route::any('/convert', function(){
+	
+	if( Input::file('file') )
+	{
+		$result = AutoSchemaConverter::convert_file( Input::file('file.tmp_name') );
+		return View::make('convert.index')->with('result', $result);
+	}
+	else
+	{
+		return View::make('convert.index');
+	}
+});
+*/
 
 Route::get('/', function()
 {
 	return View::make('home.index');
 });
 
-Route::get('/autoschema', function()
-{
-	AutoSchema::load_definitions();
-	$data['tables'] = AutoSchema::check_tables();
-	$data['views'] = AutoSchema::check_views();
-	return View::make('autoschema.index')->with($data);
-});
-
-Route::get('/autoschema/views', function()
-{
-	AutoSchema::load_definitions();
-	print_r( AutoSchema::get_views() );
-});
-
-Route::get('autoschema/create_table/(:any)', function($table)
-{
-	$result = AutoSchema::create_table($table);
-	return Redirect::back();
-});
-
-Route::get('autoschema/create_view/(:any)', function($name)
-{
-	$result =AutoSchema::create_view($name);
-	return Redirect::back();
-});
-
-Route::get('autoschema/drop_table/(:any)', function($table)
-{
-	$result = AutoSchema::drop_table($table);
-	return Redirect::back();
-});
-
-Route::get('autoschema/update_table/(:any)', function($table)
-{
-	$result = AutoSchema::update_table($table);
-	return Redirect::back();
-});
-
-Route::get('autoschema/update_view/(:any)', function($view)
-{
-	$result = AutoSchema::update_view($view);
-	return Redirect::back();
-});
-
-
 Route::get('/form', function()
 {
-	if( Input::get('table') ){
-		$data['fields'] = AutoSchema::get_for_form(Input::get('table'));
-	} else {
-		$data['fields'] = array();
-	}
-	
-	return View::make('form.index')->with($data);
+	$data['fields'] = AutoSchema::get_table_definition('bills')->columns;
+	return View::make('form/index')->with($data);
 });
 
-Route::post('/form', function()
-{
-	$fields = AutoSchema::get_for_form('users');
-	foreach ($fields as $key => $value) {
-		$data[$value['name']] = Input::get($value['name']);
-	}
-	$result = DB::table('users')->insert($data);
-});
+
 /*
 |--------------------------------------------------------------------------
 | Application 404 & 500 Error Handlers
