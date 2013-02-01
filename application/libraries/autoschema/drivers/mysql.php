@@ -5,7 +5,7 @@ use \Laravel\Database as DB;
 use \Laravel\Config as Config;
 use \Laravel\Log as Log;
 
-class MySQL extends Driver {
+class MySQL implements Driver {
 
 	public static function create_table($table)
 	{
@@ -16,13 +16,17 @@ class MySQL extends Driver {
 			foreach ($schema->columns as $column) {
 				$command .= "\t" . static::column_definition($column) . ",\n";
 			}
-		$command .= "\tPRIMARY KEY (" . $schema->primary_key . ")\n";
+		if( !empty($schema->primary_key) ){
+			$command .= "\tPRIMARY KEY (" . $schema->primary_key . ")\n";
+		} else {
+			$command = rtrim($command, ",\n") . "\n"; // Remove the previous comma
+		}
 		$command .= ");\n";
 		Log::AutoSchema($command);
 		return DB::query($command);
 	}
 
-	public function create_view($name)
+	public static function create_view($name)
 	{
 		$schema = AutoSchema::get_view_definition($name);
 		if( !$schema ) return false;
@@ -54,7 +58,7 @@ class MySQL extends Driver {
 		return DB::query($command);
 	}
 
-	protected static function column_definition( $column=array() )
+	public static function column_definition( $column=array() )
 	{
 		$definition = $column['name'] . " ";
 		$types = array(
@@ -158,11 +162,11 @@ class MySQL extends Driver {
 		return $columns;
 	}
 
-	public function update_table($table)
+	public static function update_table($table)
 	{
 		$table_pk 				= DB::first("SHOW INDEX FROM $table")->column_name;
 		$columns_in_definition 	= AutoSchema::columns_in_definition($table);
-		$columns_in_table 		= $this->columns_in_table($table);
+		$columns_in_table 		= self::columns_in_table($table);
 		$schema 				= AutoSchema::get_table_definition($table);
 		$alter_table 			= "ALTER TABLE $table";
 		$pk_definition			= "";
@@ -176,12 +180,12 @@ class MySQL extends Driver {
 
 		// Get the defined and database columns so we can work out what to add, alter and drop.
 		$columns_in_definition 	= AutoSchema::columns_in_definition($table);
-		$columns_in_table 		= $this->columns_in_table($table);
+		$columns_in_table 		= self::columns_in_table($table);
 		
 		// Alter table stamements
 		
 		foreach ($schema->columns as $column) {
-			$definition = $this->column_definition($column);
+			$definition = self::column_definition($column);
 			if( !array_key_exists($column['name'], $columns_in_table) ){
 				$alter_statements[] = "$alter_table ADD $definition $after_previous_column;";
 			} else {
@@ -212,11 +216,11 @@ class MySQL extends Driver {
 		}
 	}
 
-	public function update_view($view)
+	public static function update_view($view)
 	{
 		$command = "DROP VIEW IF EXISTS $view";
 		$result = DB::query($command);
 		Log::AutoSchema($command);
-		return $this->create_view($view);
+		return self::create_view($view);
 	}
 }

@@ -5,7 +5,7 @@ use \Laravel\Database as DB;
 use \Laravel\Config as Config;
 use \Laravel\Log as Log;
 
-class Postgres extends Driver {
+class Postgres implements Driver {
 
 	public static function create($table)
 	{
