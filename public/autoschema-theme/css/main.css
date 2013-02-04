@@ -208,6 +208,11 @@ body {
 .col .cell {
   padding: 0 1em;
 }
+.col h2.cell {
+  margin: 0;
+  padding: 1em 0.6em;
+  background: #eee;
+}
 header {
   background: #333;
   color: #fff;
