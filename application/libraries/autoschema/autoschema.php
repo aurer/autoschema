@@ -369,20 +369,21 @@ class AutoSchema
 	public static function driver()
 	{
 		$driver = Config::get('database.default');
-		if( in_array($driver, array('mysql', 'pgsql') ) ){
-			switch ($driver) {
-				case 'mysql':
-					return new Drivers\MySQL;
-					break;
-				case 'pgsql':
-					return new Drivers\Postgres;
-					break;
-			}
-			return new Drivers\MySql;
-		} else {
-			Log::error(__METHOD__ . ': only mysql and pgsql databases are supported at the moment.');
-			exit('AutoSchema: only mysql and pgsql databases are supported at the moment.');	
-		} 
+		
+		switch ($driver) {
+			case 'mysql':
+				return new Drivers\MySQL;
+				break;
+			case 'pgsql':
+				return new Drivers\Postgres;
+				break;
+			case 'sqlite':
+				return new Drivers\SQLite;
+				break;
+			default:
+				Log::error(__METHOD__ . ': only mysql, sqlite and pgsql databases are supported at the moment.');
+				exit('AutoSchema: only mysql, sqlite and pgsql databases are supported at the moment.');
+		}
 	}
 
 	/**
