@@ -141,27 +141,67 @@ class Table
 	{
 		$columns_in_definition 	= AutoSchema::columns_in_definition($name);
 		$columns_in_table 		= AutoSchema::columns_in_table($name);
-		$errors = array();
+		$errors 				= array();
+		$changes 				= self::diff_columns($columns_in_definition, $columns_in_table);
+
+		foreach ($changes->renamed as $old => $new) {
+			$errors[] = "The '$old' column will be renamed to '$new'";
+		}
+
+		foreach ($changes->altered as $name => $def) {
+			$errors[] = "The '$name' column will be changed to '$def'";
+		}
+
+		foreach ($changes->added as $name => $def) {
+			$errors[] = "The '$name' column will be added";
+		}
+
+		foreach ($changes->removed as $name => $def) {
+			$errors[] = "The '$name' column will be removed";
+		}
 		
-		foreach ($columns_in_definition as $key => $value) {
-			// Column isn't in database
-			if( !array_key_exists($key, $columns_in_table) ){
-				$errors[] = "The '$key' column has been added.";
-			}
-			// Column definition differs
-			elseif( $value !== $columns_in_table[$key] ){
-				$def_str = str_replace($key." ", '', $value);
-				$db_str  = str_replace($key." ", '', $columns_in_table[$key]);
-				$errors[] = "The '$key' column has changed: schema($def_str), database($db_str)";
-			}
-		}
-		foreach ($columns_in_table as $key => $value) {
-			// Column isn't in definition
-			if( !array_key_exists($key, $columns_in_definition) ){
-				$errors[] = "The '$key' column has been removed.";
-			}
-		}
 		return $errors;
+	}
+
+	public static function diff_columns($definition, $table)
+	{
+		$definition_only 	= array_diff($definition, $table);
+		$table_only 		= array_diff($table, $definition);
+		$renamed 			= array();
+		$altered 			= array();
+		$changes			= new \stdClass;
+		
+		// Loop each definition difference
+		foreach ($definition_only as $def_name => $def_def) {
+			$def_type = str_replace("$def_name ", '', $def_def); // Remove the name to get just the type and length
+			
+			// Check for the first database column that matches the definition column type
+			foreach ($table_only as $tab_name => $tab_def) {
+				$tab_type = str_replace("$tab_name ", '', $tab_def); // Remove the name to get just the type and length
+				
+				// Type match so store the column name and remove from the definition and table arrays
+				if( $def_type === $tab_type ){
+					$renamed[$tab_name] = $def_name;
+					unset($table_only[$tab_name]);
+					unset($definition_only[$def_name]);
+					break;
+				}
+
+				// Check for type changes e.g name is the same but type or length has changed
+				if( $def_name === $tab_name ){
+					$altered[$tab_name] = $def_def;
+					unset($table_only[$tab_name]);
+					unset($definition_only[$def_name]);
+					break;
+				}
+			}
+		}
+
+		$changes->renamed 	= $renamed;
+		$changes->altered 	= $altered;
+		$changes->added 	= $definition_only;
+		$changes->removed 	= $table_only;
+		return $changes;
 	}
 
 	public function __set($item, $value){
