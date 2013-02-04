@@ -29,37 +29,6 @@ AutoSchema::table('users', function($table)
     $table->timestamps();
 });
 
-/*
-AutoSchema::table('bills', function($table)
-{
-    $table->increments('id');
-    $table->integer('user_id');
-    $table->string('title');
-    $table->string('name');
-    $table->text('comment');
-    $table->string('amounts');
-    $table->string('recurrence'); // Weekly, Monthly or Yearly
-    $table->integer('renews_on'); // Weekly = day of week, Monthly/Yearly = day of year
-    $table->boolean('send_reminder'); // Should an email reminder be sent
-    $table->integer('reminder'); // How many days before renewal to send reminder
-    $table->boolean('include_in_totals');
-    $table->timestamps();
-});
-
-AutoSchema::table('users', function($table)
-{
-    $table->increments('id');
-    $table->string('forename', 255);
-    $table->string('surname', 255);
-    $table->string('username', 255);
-    $table->integer('email')->values('emails:id,email');
-    $table->string('communication_pref')->label('Communcation Preferences')->values(array('email'=>'Email', 'phone'=>'Phone', 'mail'=>'Mail'))->attributes(array('formtype'=>'checkbox'));
-    $table->string('password', 255);
-    $table->string('hash', 255);
-    $table->boolean('active');
-    $table->timestamps();
-});
-
 AutoSchema::table('emails', function($table)
 {
     $table->increments('id');
@@ -69,12 +38,11 @@ AutoSchema::table('emails', function($table)
     $table->timestamps();
 });
 
-
 AutoSchema::view('users_vw', function($view){
     $view->definition("SELECT * FROM users where active = 1 AND id > 100 AND id < 200");
 });
 
-
+/*
 AutoSchema::table("comms_wysiwyg", function($table){
     $table->increments("id");
     $table->timestamp("created_at");
