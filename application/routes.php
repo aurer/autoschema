@@ -6,11 +6,6 @@
 |--------------------------------------------------------------------------
 */
 
-/*
-Route::get('test', function(){
-
-});
-
 Route::any('/convert', function(){
 	
 	if( Input::file('file') )
@@ -23,7 +18,7 @@ Route::any('/convert', function(){
 		return View::make('convert.index');
 	}
 });
-*/
+
 
 Route::get('/', function()
 {
