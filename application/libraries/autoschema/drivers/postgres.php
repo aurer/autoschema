@@ -1,15 +1,16 @@
 <?php namespace AutoSchema\Drivers;
 
-use \AutoSchema\AutoSchema as AutoSchema;
+use \AutoSchema\AutoSchema;
+use \AutoSchema\Table;
 use \Laravel\Database as DB;
-use \Laravel\Config as Config;
-use \Laravel\Log as Log;
+use \Laravel\Config;
+use \Laravel\Log;
 
 class Postgres implements Driver {
 
-	public static function create($table)
+	public static function create_table($table)
 	{
-		$schema = AutoSchema::get($table);
+		$schema = AutoSchema::get_table_definition($table);
 		if( !$schema ) return false;
 
 		$command = "CREATE TABLE IF NOT EXISTS " . $schema->name . " (\n";
@@ -19,14 +20,24 @@ class Postgres implements Driver {
 		$command .= "\tPRIMARY KEY (" . $schema->primary_key . ")\n";
 		$command .= ");\n";
 		$command2 = 'CREATE SEQUENCE ' . $table .'_'. $schema->primary_key . "_seq;\n";
-		$command3 = "ALTER TABLE $table ALTER COLUMN $schema[primary_key] SET DEFAULT NEXTVAL('" . $table .'_'. $schema->primary_key . "_seq');";
+		$command3 = "ALTER TABLE $table ALTER COLUMN $schema->primary_key SET DEFAULT NEXTVAL('" . $table .'_'. $schema->primary_key . "_seq');";
 		
 		DB::query($command);
 		DB::query($command2);
 		DB::query($command3);
 	}
 
-	public static function drop($table)
+	public static function create_view($name)
+	{
+		$schema = AutoSchema::get_view_definition($name);
+		if( !$schema ) return false;
+
+		$command = "CREATE OR REPLACE VIEW " . $schema->name . " AS " . $schema->definition . "\n";
+		Log::AutoSchema($command);
+		echo DB::query($command);
+	}
+
+	public static function drop_table($table)
 	{
 		$command = "DROP TABLE IF EXISTS " . $table . "\n";
 		$command2 = "DROP SEQUENCE " . $table . "_id_seq\n";
@@ -34,7 +45,18 @@ class Postgres implements Driver {
 		DB::query($command2);
 	}
 
-	protected static function column_definition( $column=array() )
+	public static function drop_view($view)
+	{	
+		// Don't drop it, if it's in the definitions
+		$schema = AutoSchema::get_view_definition($view);
+		if( $schema ) return false;
+
+		$command = "DROP VIEW " . $view . "\n";
+		Log::AutoSchema($command);
+		return DB::query($command);
+	}
+
+	public static function column_definition( $column=array() )
 	{
 		$definition = $column['name'] . " ";
 		$types = array(
@@ -47,7 +69,7 @@ class Postgres implements Driver {
 			'date'		=> 'DATE',
 			'timestamp'	=> 'TIMESTAMP',
 			'blob'		=> 'BLOB',
-			'default'	=> 'VARCHAR(200)',
+			'default'	=> 'VARCHAR',
 		);
 
 		// Set the type
@@ -87,6 +109,18 @@ class Postgres implements Driver {
 		return $tables;
 	}
 
+	public static function views_in_database()
+	{	
+		$views = array();
+		$database = Config::get('database.connections');
+		$command = "SELECT * FROM information_schema.tables WHERE TABLE_TYPE = 'VIEW' AND TABLE_SCHEMA = 'public'";
+		$result = DB::query($command);
+		foreach ($result as $view) {
+			$views[] = $view->table_name;
+		}	
+		return $views;
+	}
+
 	/**
 	 * Return the columns for a given table.
 	 *
@@ -109,76 +143,72 @@ class Postgres implements Driver {
 			'datetime' 			=> 'timestamp',
 			'blob' 				=> 'blob',
 		);
+
 		$database = Config::get('database.connections');
-		$command = "SELECT COLUMN_NAME, CHARACTER_MAXIMUM_LENGTH, data_type FROM information_schema.columns WHERE TABLE_SCHEMA = 'public' AND TABLE_NAME = ?";
+		$command = "SELECT * FROM information_schema.columns WHERE TABLE_SCHEMA = 'public' AND TABLE_NAME = ?";
 		$result = DB::query($command, array($table) );
 		foreach ($result as $column) {
-			$name = $column->column_name;
-			$type = $translate[$column->data_type];
-			$length = ($column->character_maximum_length) ? $column->character_maximum_length : '';
-			
-			// Remove length for these types as they don't have length defined in the schema.
-			if( in_array($type, array('text')) ){
-				$length = '';
+
+			$definition['name']		 = $column->column_name;
+			$definition['type']		 = $translate[$column->data_type];
+			$definition['length']	 = ($column->character_maximum_length) ? $column->character_maximum_length : null;
+			$definition['precision'] = $column->data_type == 'decimal' ? $column->numeric_precision : null;
+			$definition['scale']	 = $column->data_type == 'decimal' ? $column->numeric_scale : null;
+
+			if( $definition['type'] == 'text' ){
+				$definition['length'] = null;
 			}
 
-			$columns[$name] = trim("$name $type $length");
+			$columns[$column->column_name] = self::column_definition($definition);
 		}
 		return $columns;
 	}
 
-	public function update_table($table)
+	public static function update_table($table)
 	{
-		$table_pk 				= DB::first("SELECT pg_attribute.attname, format_type(pg_attribute.atttypid, pg_attribute.atttypmod) FROM pg_index, pg_class, pg_attribute WHERE pg_class.oid = '$table'::regclass AND indrelid = pg_class.oid AND pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = any(pg_index.indkey) AND indisprimary")->attname;
-		$columns_in_definition 	= AutoSchema::columns_in_definition($table);
-		$columns_in_table 		= $this->columns_in_table($table);
-		$schema 				= AutoSchema::get($table);
-		$alter_table 			= "ALTER TABLE $table";
-		$pk_definition			= "";
-		$alter_statements 		= array();
-		$after_previous_column  = "";
-
-		if( !$schema ) {
-			Log::notice("AutoSchema: the '$table' table is not defined");
-			return false;
-		}
-
 		// Get the defined and database columns so we can work out what to add, alter and drop.
 		$columns_in_definition 	= AutoSchema::columns_in_definition($table);
-		$columns_in_table 		= $this->columns_in_table($table);
-		
-		// Alter table stamements
-		
-		foreach ($schema->columns as $column) {
-			$definition = $this->column_definition($column);
-			if( !array_key_exists($column['name'], $columns_in_table) ){
-				$alter_statements[] = "$alter_table ADD $definition $after_previous_column;";
-			} else {
-				$alter_statements[]  = "$alter_table ALTER " . $column['name'] . " TYPE " . $this->translate($column, 'to_database') . ";";
-			}
-			if( $column['name'] == $table_pk ){
-				$pk_definition = $column['name'] . str_replace($column['name'], ' TYPE', $definition);
-			}
-			$after_previous_column = "AFTER " . $column['name'];
+		$columns_in_table 		= self::columns_in_table($table);
+		$schema 				= AutoSchema::get_table_definition($table);
+		//$table_pk 				= DB::first("SHOW INDEX FROM $table")->column_name;
+
+		// Get the table differences
+		$diff = Table::diff_columns($columns_in_definition, $columns_in_table);
+
+		$alter_table 			= "ALTER TABLE $table";
+		foreach ($diff->renamed as $key => $value) {
+			$commands[] = "$alter_table CHANGE {$key} {$columns_in_definition[$value]}";
 		}
-		foreach( $columns_in_table as $key => $column){
-			if( !array_key_exists($key, $columns_in_definition) ){
-				$alter_statements[] = "$alter_table DROP COLUMN $key;";
-			}
+
+		foreach ($diff->altered as $key => $value) {
+			$commands[] = "$alter_table MODIFY {$columns_in_definition[$key]}";
 		}
-		
-		
-		if( $table_pk && !$schema->primary_key != $table_pk ){
-			$alter_statements[] = "$alter_table ALTER $pk_definition;";
-			$alter_statements[] = "$alter_table DROP CONSTRAINT " . $table . "_pkey;";
-			$alter_statements[] = "$alter_table ADD PRIMARY KEY({$schema->primary_key});";
+
+		foreach ($diff->added as $key => $value) {
+			$commands[] = "$alter_table ADD {$columns_in_definition[$key]}";
 		}
-		
+
+		foreach ($diff->removed as $key => $value) {
+			$commands[] = "$alter_table DROP $key";
+		}
+
+		if( empty($commands) ){
+			return;
+		}
+
 		Log::AutoSchema("Updating $table");
-		foreach ($alter_statements as $statement) {
-			Log::AutoSchema("$statement");
-			if( !DB::query($statement) ) break;
+		foreach ($commands as $command) {
+			Log::AutoSchema("$command");
+			if( !DB::query($command) ) break;
 		}
+	}
+
+	public static function update_view($view)
+	{
+		$command = "DROP VIEW IF EXISTS $view";
+		$result = DB::query($command);
+		Log::AutoSchema($command);
+		return self::create_view($view);
 	}
 
 	/**

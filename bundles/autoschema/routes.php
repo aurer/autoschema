@@ -43,7 +43,7 @@ Route::get('(:bundle)/drop_table/(:any)', function($table)
 */
 Route::get('(:bundle)/drop_view/(:any)', function($view)
 {
-	$result = AutoSchema::drop_table($view);
+	$result = AutoSchema::drop_view($view);
 	return Redirect::back();
 });
 

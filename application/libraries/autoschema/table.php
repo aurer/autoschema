@@ -189,7 +189,7 @@ class Table
 
 				// Check for type changes e.g name is the same but type or length has changed
 				if( $def_name === $tab_name ){
-					$altered[$tab_name] = $def_def;
+					$altered[$tab_name] = $def_def.":".$tab_def;
 					unset($table_only[$tab_name]);
 					unset($definition_only[$def_name]);
 					break;

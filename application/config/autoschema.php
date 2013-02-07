@@ -40,5 +40,5 @@ AutoSchema::table('emails', function($table)
 });
 
 AutoSchema::view('users_vw', function($view){
-    $view->definition("SELECT * FROM users where active = 1 AND id > 100 AND id < 200");
+    $view->definition("SELECT * FROM bills");
 });

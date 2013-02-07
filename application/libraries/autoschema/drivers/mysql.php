@@ -171,7 +171,7 @@ class MySQL implements Driver {
 		$columns_in_definition 	= AutoSchema::columns_in_definition($table);
 		$columns_in_table 		= self::columns_in_table($table);
 		$schema 				= AutoSchema::get_table_definition($table);
-		$table_pk 				= DB::first("SHOW INDEX FROM $table")->column_name;
+		//$table_pk 				= DB::first("SHOW INDEX FROM $table")->column_name;
 
 		// Get the table differences
 		$diff = Table::diff_columns($columns_in_definition, $columns_in_table);
