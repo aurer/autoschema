@@ -1,9 +1,10 @@
 <?php namespace AutoSchema\Drivers;
 
-use \AutoSchema\AutoSchema as AutoSchema;
+use \AutoSchema\AutoSchema;
+use \AutoSchema\Table;
 use \Laravel\Database as DB;
-use \Laravel\Config as Config;
-use \Laravel\Log as Log;
+use \Laravel\Config;
+use \Laravel\Log;
 
 class MySQL implements Driver {
 
@@ -133,86 +134,73 @@ class MySQL implements Driver {
 	{
 		$columns = array();
 		$translate = array(
-			'varchar' 	=> 'string',
-			'int' 		=> 'integer',
-			'float' 	=> 'float',
-			'decimal' 	=> 'decimal',
-			'text' 		=> 'text',
-			'tinyint' 	=> 'boolean',
-			'date' 		=> 'date',
-			'timestamp' => 'timestamp',
-			'datetime' 	=> 'timestamp',
-			'blob' 		=> 'blob',
+			'varchar' 	 => 'string',
+			'int' 		 => 'integer',
+			'float' 	 => 'float',
+			'decimal' 	 => 'decimal',
+			'text' 		 => 'text',
+			'tinyint' 	 => 'boolean',
+			'date' 		 => 'date',
+			'timestamp'  => 'timestamp',
+			'blob' 		 => 'blob',
 		);
 		$database = Config::get('database.connections');
-		$command = "SELECT COLUMN_NAME, CHARACTER_MAXIMUM_LENGTH, data_type FROM information_schema.columns WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?";
+		$command = "SELECT * FROM information_schema.columns WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?";
 		$result = DB::query($command, array($database['mysql']['database'], $table) );
 		foreach ($result as $column) {
-			$name = $column->column_name;
-			$type = $translate[$column->data_type];
-			$length = ($column->character_maximum_length) ? $column->character_maximum_length : '';
-			
-			// Remove length for these types as they don't have length defined in the schema.
-			if( in_array($type, array('text')) ){
-				$length = '';
+
+			$definition['name']		 = $column->column_name;
+			$definition['type']		 = $translate[$column->data_type];
+			$definition['length']	 = ($column->character_maximum_length) ? $column->character_maximum_length : null;
+			$definition['precision'] = $column->data_type == 'decimal' ? $column->numeric_precision : null;
+			$definition['scale']	 = $column->data_type == 'decimal' ? $column->numeric_scale : null;
+			$definition['increment'] = ($column->column_key == 'PRI') ? true : false;
+
+			if( $definition['type'] == 'text' ){
+				$definition['length'] = null;
 			}
 
-			$columns[$name] = trim("$name $type $length");
+			$columns[$column->column_name] = self::column_definition($definition);
 		}
 		return $columns;
 	}
 
 	public static function update_table($table)
 	{
-		$table_pk 				= DB::first("SHOW INDEX FROM $table")->column_name;
-		$columns_in_definition 	= AutoSchema::columns_in_definition($table);
-		$columns_in_table 		= self::columns_in_table($table);
-		$schema 				= AutoSchema::get_table_definition($table);
-		$alter_table 			= "ALTER TABLE $table";
-		$pk_definition			= "";
-		$alter_statements 		= array();
-		$after_previous_column  = "";
-
-		if( !$schema ) {
-			Log::notice("AutoSchema: the '$table' table is not defined");
-			return false;
-		}
-
 		// Get the defined and database columns so we can work out what to add, alter and drop.
 		$columns_in_definition 	= AutoSchema::columns_in_definition($table);
 		$columns_in_table 		= self::columns_in_table($table);
-		
-		// Alter table stamements
-		
-		foreach ($schema->columns as $column) {
-			$definition = self::column_definition($column);
-			if( !array_key_exists($column['name'], $columns_in_table) ){
-				$alter_statements[] = "$alter_table ADD $definition $after_previous_column;";
-			} else {
-				$alter_statements[]  = "$alter_table MODIFY $definition $after_previous_column;";
-			}
-			if( $column['name'] == $table_pk ){
-				$pk_definition = str_replace('AUTO_INCREMENT', '', $definition);
-			}
-			$after_previous_column = "AFTER " . $column['name'];
+		$schema 				= AutoSchema::get_table_definition($table);
+		$table_pk 				= DB::first("SHOW INDEX FROM $table")->column_name;
+
+		// Get the table differences
+		$diff = Table::diff_columns($columns_in_definition, $columns_in_table);
+
+		$alter_table 			= "ALTER TABLE $table";
+		foreach ($diff->renamed as $key => $value) {
+			$commands[] = "$alter_table CHANGE {$key} {$columns_in_definition[$value]}";
 		}
-		foreach( $columns_in_table as $key => $column){
-			if( !array_key_exists($key, $columns_in_definition) ){
-				$alter_statements[] = "$alter_table DROP COLUMN $key;";
-			}
+
+		foreach ($diff->altered as $key => $value) {
+			$commands[] = "$alter_table MODIFY {$columns_in_definition[$key]}";
 		}
-		
-		
-		if( $table_pk && !$schema->primary_key != $table_pk ){
-			$alter_statements[] = "$alter_table MODIFY $pk_definition;";
-			$alter_statements[] = "$alter_table DROP PRIMARY KEY;";
-			$alter_statements[] = "$alter_table ADD PRIMARY KEY({$schema->primary_key});";
+
+		foreach ($diff->added as $key => $value) {
+			$commands[] = "$alter_table ADD {$columns_in_definition[$key]}";
 		}
-		
+
+		foreach ($diff->removed as $key => $value) {
+			$commands[] = "$alter_table DROP $key";
+		}
+
+		if( empty($commands) ){
+			return;
+		}
+
 		Log::AutoSchema("Updating $table");
-		foreach ($alter_statements as $statement) {
-			Log::AutoSchema("$statement");
-			if( !DB::query($statement) ) break;
+		foreach ($commands as $command) {
+			Log::AutoSchema("$command");
+			if( !DB::query($command) ) break;
 		}
 	}
 

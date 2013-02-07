@@ -147,29 +147,26 @@ class SQLite implements Driver{
 		$columns = array();
 		$translate = array(
 			'varchar' 	=> 'string',
-			'int' 		=> 'integer',
-			'float' 	=> 'float',
-			'decimal' 	=> 'decimal',
 			'text' 		=> 'text',
-			'tinyint' 	=> 'boolean',
-			'date' 		=> 'date',
-			'timestamp' => 'timestamp',
-			'datetime' 	=> 'timestamp',
+			'tinyint'	=> 'boolean',
+			'timestamp'	=> 'timestamp',
+			'int' 		=> 'integer',
 			'blob' 		=> 'blob',
 		);
 		$database = Config::get('database.connections');
 		$result = self::raw_query("PRAGMA table_info($table);");
 		foreach ($result as $column) {
-			$name = $column->name;
-			$type = $translate[ preg_match('/^[\w]+/', $column->type, $type_match) ? strtolower($type_match[0]) : 'varchar' ];
-			$length = preg_match('/[0-9]+/', $column->type, $len_matches) ? $len_matches[0] : '';
 			
-			// Remove length for these types as they don't have length defined in the schema.
-			if( in_array($type, array('text', 'boolean')) ){
-				$length = '';
+			$definition['name']		 = $column->name;
+			$definition['type']		 = $translate[ preg_match('/^[\w]+/', $column->type, $type_match) ? strtolower($type_match[0]) : 'varchar' ];
+			$definition['length']	 = preg_match('/[0-9]+/', $column->type, $len_matches) ? $len_matches[0] : null;
+			$definition['increment'] = ($column->pk == 1) ? true : false;
+
+			if( $definition['type'] == 'text' || $definition['type'] == 'boolean'){
+				$definition['length'] = null;
 			}
 
-			$columns[$name] = trim("$name $type $length");
+			$columns[$column->name] = self::column_definition($definition);
 		}
 		return $columns;
 	}

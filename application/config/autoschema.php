@@ -4,10 +4,11 @@ AutoSchema::table('bills', function($table)
 {
     $table->increments('id');
     $table->integer('user_id')->label('User')->values('users:id,username');
-    $table->string('title');
+    $table->string('titles');
     $table->string('name');
-    $table->text('comments');
-    $table->string('amount', 10);
+    //$table->text('comments');
+    $table->integer('test');
+    $table->string('amount', 11);
     $table->string('recurrence'); // Weekly, Monthly or Yearly
     $table->integer('renews_on'); // Weekly = day of week, Monthly/Yearly = day of year
     $table->boolean('send_reminder'); // Should an email reminder be sent

@@ -330,10 +330,12 @@ class AutoSchema
 		if( !$schema ) return false;
 		
 		foreach ($schema->columns as $column) {
+			$definition = self::column_definition($column);
 			$name = $column['name'];
 			$length = isset($column['length']) ? $column['length'] : '';
 			$type = $column['type'];
-			$columns[$name] = trim("$name $type $length");
+			//$columns[$name] = trim("$name $type $length");
+			$columns[$name] = $definition;
 		}
 		return $columns;
 	}
