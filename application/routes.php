@@ -25,10 +25,43 @@ Route::get('/', function()
 	return View::make('home.index');
 });
 
-Route::get('/form', function()
+Route::get('admin', function(){
+	$data['tables'] = AutoSchema::tables_in_definition();
+	return View::make('admin/index')->with($data);
+});
+
+Route::get('admin/(:any)', function()
 {
-	$data['fields'] = AutoSchema::get_table_definition('bills')->columns;
-	return View::make('form/index')->with($data);
+	$data['table'] = URI::segment(2);
+	$fields = AutoSchema::get_table_definition($data['table'])->columns;
+	foreach ($fields as $value) {
+		if( !in_array($value['name'], array('id', 'created_at', 'updated_at') ) ){
+			$data['fields'][] = $value;
+		}
+	}
+	return View::make('admin/table')->with($data);
+});
+
+Route::post('admin/(:any)/add', function()
+{
+	$data['table'] = URI::segment(2);
+	$rules = AutoSchema\AutoForm::table_rules($data['table']);	
+	$input = Input::all();
+	$validation = Validator::make($input, $rules);
+	if ($validation->fails())
+	{
+	    return Redirect::back()->with_input()->with_errors($validation);
+	}
+	else
+	{
+		if( isset($input['id'] ) ){
+			DB::table($data['table'])->where('id', '=', $input['id'])->update($input);
+		}
+		else{
+			DB::table($data['table'])->insert($input);
+		}
+	}
+	Redirect::back();
 });
 
 

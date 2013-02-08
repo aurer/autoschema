@@ -4,8 +4,8 @@ AutoSchema::table('bills', function($table)
 {
     $table->increments('id');
     $table->integer('user_id')->label('User')->values('users:id,username');
-    $table->string('titles');
-    $table->string('name');
+    $table->string('titles')->rules('required');
+    $table->string('name')->rules('required');
     //$table->text('comments');
     $table->integer('test');
     $table->string('amount', 11);

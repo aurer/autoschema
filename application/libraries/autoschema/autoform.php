@@ -22,41 +22,23 @@ class AutoForm{
 	 *
 	 * @return AutoForm
 	 **/
-	public static function field($table, $column, $html5=false)
+	public static function field($table, $column, $showall=false)
 	{
 		$definition = AutoSchema::column_in_definition($table, $column);
-		$definition['type'] = self::translate( $definition['type'], $html5 );
-		$definition['value'] = null;
+		return new AutoForm((object)$definition);
+	}
 
-		// Build values array if it exists
-		if( isset($definition['values']) ){
-			$values = $definition['values'];
-			if( is_array($values) ){
-				$definition['type'] = 'select'; // Change type to a select
-			}
-			// Should we get values from a specified table e.g. 'table:column1,column2'
-			elseif( preg_match('/^([a-z_]+):([a-z_0-9]+),?([a-z_0-9]+)?$/', $values, $matches) ){
-				$table = $matches[1];
-				$col1 = $matches[2];
-				$col2 = isset($matches[3]) ? $matches[3] : null;
-				$result = isset($matches[3]) ? DB::query("SELECT $col1, $col2 FROM $table") : DB::query("SELECT $col1 FROM $table");
 
-				$definition['type'] = 'select';
-				$definition['values'] = array();
-				foreach ($result as $key => $value) {
-					if( $col2 ) $definition['values'][$value->$col1] = $value->$col2;
-					else $definition['values'][$key] = $value->$col1;
-				}
-				$definition['values'];
+	public static function table_rules($table)
+	{
+		$definition = AutoSchema::get_table_definition($table);
+		$rules = array();
+		foreach ($definition->columns as $column) {
+			if( isset($column['rules']) ){
+				$rules[$column['name']] = $column['rules'];
 			}
 		}
-
-		$definition['attributes'] = array(
-			'id' => 'in-'.$definition['name'],
-			'class' => 'type-'.$definition['type'],
-		);
-
-		return new AutoForm($definition);
+		return $rules;
 	}
 
 	/**
@@ -64,21 +46,17 @@ class AutoForm{
 	 *
 	 * @return string
 	 **/
-	public function element()
+	public function element($definition, $value)
 	{	
-		extract($this->definition);
-		
-		if( $type == 'textarea' ){
-			return Form::textarea($name, $value, $attributes);
+		$value = empty($value) ? $definition->value : $value;
+		if( $definition->type == 'textarea' ){
+			return Form::textarea($definition->name, $value, $definition->attributes);
 		}
-		elseif( $type == 'checkbox' || $type == 'radio' ){
-			return Form::$type($name, $value, $attributes);
-		}
-		elseif( $type == 'select' ){
-			return Form::select($name, $values, $value, $attributes);
+		elseif( $definition->type == 'select' ){
+			return Form::select($definition->name, $definition->values, $value, $definition->attributes);
 		}
 		else{
-			return Form::input($type, $name, $value, $attributes);
+			return Form::input($definition->type, $definition->name, $value, $definition->attributes);
 		}
 	}
 
@@ -87,14 +65,64 @@ class AutoForm{
 	 *
 	 * @return string
 	 **/
-	public function form_field()
+	public function form_field($value)
 	{
-		extract($this->definition);
-		$html = '<div class="field type-' . $type . '">' . "\n";
-		$html .= "\t" . '<div class="label">' . Form::label($attributes['id'], $label) . '</div>' . "\n";
-		$html .= "\t" . '<div class="input">' . $this->element() . '</div>' . "\n";
+		$definition = $this->translate_for_form($this->definition);
+		$html = '<div class="field type-' . $definition->type . '">' . "\n";
+		$html .= "\t" . '<div class="label">' . Form::label($definition->attributes['id'], $definition->label) . '</div>' . "\n";
+		$html .= "\t" . '<div class="input">' . $this->element($definition, $value) . '</div>' . "\n";
 		$html .= '</div>' . "\n";
 		return $html;
+	}
+
+	/**
+	 * Translates a column definition for use in a form
+	 *
+	 * @return object
+	 **/
+	protected function translate_for_form($definition)
+	{
+		$definition->type = self::translate( $definition->type );
+		$definition->value = null;
+
+		// Build values array if it exists
+		if( isset($definition->values) ){
+			$values = $definition->values;
+			if( is_array($values) ){
+				$definition->type = 'select'; // Change type to a select
+			}
+			// Should we get values from a specified table e.g. 'table:column1,column2'
+			elseif( preg_match('/^([a-z_]+):([a-z_0-9]+),?([a-z_0-9]+)?$/', $values, $matches) ){
+				$table = $matches[1];
+				$col1 = $matches[2];
+				$col2 = isset($matches[3]) ? $matches[3] : null;
+				$result = isset($matches[3]) ? DB::query("SELECT $col1, $col2 FROM $table") : DB::query("SELECT $col1 FROM $table");
+
+				$definition->type = 'select';
+				$definition->values = array();
+				foreach ($result as $key => $value) {
+					if( $col2 ) $definition->values[$value->$col1] = $value->$col2;
+					else $definition->values[$key] = $value->$col1;
+				}
+				$definition->values;
+			}
+		}
+
+		$definition->attributes = array(
+			'id' => 'in-'.$definition->name,
+			'class' => 'type-'.$definition->type,
+		);
+		return $definition;
+	}
+
+	/**
+	 * Create a full form field with label and markup
+	 *
+	 * @return string
+	 **/
+	public function rules()
+	{
+		return isset( $this->definition->rules ) ? $this->definition->rules : null;
 	}
 
 	/**
