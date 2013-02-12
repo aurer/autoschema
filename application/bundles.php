@@ -37,4 +37,12 @@ return array(
 
 	'docs' => array('handles' => 'docs'),
 	'autoschema' => array( 'handles' => 'autoschema' ),
+	'pages' 	=> array(
+		'auto' 	=> 'true',
+		'autoloads' => array(
+			'map' => array(
+				'Pages'		=> '(:bundle)/libraries/pages.php',
+			),
+		),
+	),
 );
