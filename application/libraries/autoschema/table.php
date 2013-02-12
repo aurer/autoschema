@@ -7,7 +7,6 @@ class Table
 	public $name;
 	public $primary_key;
 	public $columns;
-	public $create;
 
 	public function __construct($name)
 	{
