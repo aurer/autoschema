@@ -129,8 +129,21 @@ class Table
 	{
 		$parameters = array_merge(compact('type'), $parameters);
 
+		// Add a default label
 		$parameters['label'] = ucfirst( str_replace('_', ' ', $parameters['name']) );
+		
+		$parameters['default'] = null;
 
+		// Default integers to 0
+		if( $type === 'integer' ){
+			$parameters['default'] = 0;
+		}
+
+		// Default timestamps to the current date
+		if( $type === 'timestamp' ){
+			$parameters['default'] = date('Y-m-d H:i:s');
+		}
+		
 		$this->columns[] = $parameters;
 
 		return $this;
