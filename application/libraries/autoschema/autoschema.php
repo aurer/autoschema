@@ -5,7 +5,8 @@ use \Laravel\Config as Config;
 use \Laravel\Cache as Cache;
 use \Laravel\Request as Request;
 use \Laravel\Database as DB;
-
+use \Lavarel\Path;
+use \Laravel\Bundle;
 class AutoSchema
 {
 	protected static $tables = array();
@@ -75,6 +76,11 @@ class AutoSchema
 		if( ! is_null(Request::env() ) ){
 			$paths[] = path('app').'config/'. Request::env() . '/';
 		}
+
+		foreach (Bundle::$bundles as $name => $bundle) {
+			$paths[] = Bundle::path($name) . 'config/';
+		}
+
 		foreach ($paths as $path) {
 			if( is_file( $path . 'autoschema' . EXT ) ){
 				$configs += 1;
