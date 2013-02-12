@@ -9,6 +9,7 @@ use \Laravel\Database as DB;
 class AutoSchema
 {
 	protected static $tables = array();
+	protected static $settings = array();
 	protected static $views = array();
 	protected static $hidden_columns = array('id', 'created_at', 'updated_at');
 	
@@ -19,10 +20,34 @@ class AutoSchema
 	 * @param  function  $callback
 	 * @return array
 	 */
-	public static function table($name, $callback)
+	public static function table($name, $table_callback, $settings_callback=false)
 	{
-		call_user_func($callback, static::$tables[$name] = new Table($name));
+		call_user_func($table_callback, static::$tables[$name] = new Table($name));
+		static::$settings = static::generate_settings($name);
+		if( $settings_callback ){
+			call_user_func($settings_callback, $settings = new Settings($name));
+			foreach ($settings as $key => $value) {
+				static::$tables[$name]->settings->$key = $value;
+			}
+		}
 		return static::$tables[$name];
+	}
+
+	/**
+	 ** Generate some admin automatic settings for an AutoSchema table.
+	 *
+	 * @param  string $name
+	 * @return void
+	 */
+	protected static function generate_settings($name)
+	{
+		$settings = new \stdClass;
+		$settings->title = str_replace('_', ' ', ucfirst($name) );
+		$settings->title_columns = array();
+		for ($i=1; $i < 4; $i++) { 
+			$settings->title_columns[] = static::$tables[$name]->columns[$i]['name'];	
+		}
+		static::$tables[$name]->settings = $settings;
 	}
 
 	/**
