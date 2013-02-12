@@ -375,16 +375,15 @@ class AutoSchema
 		switch ($driver) {
 			case 'mysql':
 				return new Drivers\MySQL;
-				break;
+				
 			case 'pgsql':
 				return new Drivers\Postgres;
-				break;
+				
 			case 'sqlite':
 				return new Drivers\SQLite;
-				break;
+				
 			default:
-				Log::error(__METHOD__ . ': only mysql, sqlite and pgsql databases are supported at the moment.');
-				exit('AutoSchema: only mysql, sqlite and pgsql databases are supported at the moment.');
+				throw new \Exception("AutoSchema driver {$driver} is not supported.");
 		}
 	}
 
