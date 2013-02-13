@@ -177,7 +177,7 @@ class Postgres implements Driver {
 
 		$alter_table 			= "ALTER TABLE $table";
 		foreach ($diff->renamed as $key => $value) {
-			$commands[] = "$alter_table CHANGE {$key} {$columns_in_definition[$value]}";
+			$commands[] = "$alter_table RENAME {$key} TO {$value}";
 		}
 
 		foreach ($diff->altered as $key => $value) {
