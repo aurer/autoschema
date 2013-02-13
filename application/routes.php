@@ -5,6 +5,12 @@
 | Application Routes
 |--------------------------------------------------------------------------
 */
+Route::get('test', function(){
+
+	//print_r(Bundle::$bundles);
+	AutoSchema::load_definitions();
+	//print_r(AutoSchema::get_table_definition('pages'));
+});
 
 Route::any('/convert', function(){
 	
@@ -20,10 +26,12 @@ Route::any('/convert', function(){
 });
 
 
+/*
 Route::get('/', function()
 {
 	return View::make('home.index');
 });
+*/
 
 Route::get('admin', function(){
 	$data['tables'] = AutoSchema::tables_in_definition();
@@ -33,21 +41,30 @@ Route::get('admin', function(){
 Route::get('admin/(:any)', function()
 {
 	$data['table'] = URI::segment(2);
+	$data['items'] = DB::table($data['table'])->order_by('id')->get();
+	$data['title_columns'] = AutoSchema::get_table_definition($data['table'])->settings->title_columns;
+	return View::make('admin/list')->with($data);
+});
+
+Route::get('admin/(:any)/add', function()
+{
+	$data['table'] = URI::segment(2);
 	$fields = AutoSchema::get_table_definition($data['table'])->columns;
+	$data['rules'] = AutoSchema\AutoForm::table_rules($data['table']);
 	foreach ($fields as $value) {
 		if( !in_array($value['name'], array('id', 'created_at', 'updated_at') ) ){
 			$data['fields'][] = $value;
 		}
 	}
-	return View::make('admin/table')->with($data);
+	return View::make('admin/add')->with($data);
 });
 
 Route::post('admin/(:any)/add', function()
 {
 	$data['table'] = URI::segment(2);
-	$rules = AutoSchema\AutoForm::table_rules($data['table']);	
+	$data['rules'] = AutoSchema\AutoForm::table_rules($data['table']);
 	$input = Input::all();
-	$validation = Validator::make($input, $rules);
+	$validation = Validator::make($input, $data['rules']);
 	if ($validation->fails())
 	{
 	    return Redirect::back()->with_input()->with_errors($validation);
@@ -61,9 +78,41 @@ Route::post('admin/(:any)/add', function()
 			DB::table($data['table'])->insert($input);
 		}
 	}
-	Redirect::back();
+	return Redirect::back();
 });
 
+Route::get('admin/(:any)/(:num)/edit', function()
+{
+	$data['table'] = URI::segment(2);
+	$data['id'] = URI::segment(3);
+	$data['item'] = DB::table($data['table'])->where_id($data['id'])->first();
+	$data['rules'] = AutoSchema\AutoForm::table_rules($data['table']);
+	$fields = AutoSchema::get_table_definition($data['table'])->columns;
+	foreach ($fields as $value) {
+		if( !in_array($value['name'], array('id', 'created_at', 'updated_at') ) ){
+			$data['fields'][] = $value;
+		}
+	}
+	return View::make('admin/edit')->with($data);
+});
+
+Route::any('admin/(:any)/(:num)/update', function()
+{
+	$data['table'] = URI::segment(2);
+	$data['id'] = URI::segment(3);
+	$rules = AutoSchema\AutoForm::table_rules($data['table']);	
+	$input = Input::all();
+	$validation = Validator::make($input, $rules);
+	if ($validation->fails())
+	{
+	    return Redirect::back()->with_input()->with_errors($validation);
+	}
+	else
+	{
+		DB::table($data['table'])->where_id($data['id'])->update($input);
+	}
+	return Redirect::to('/admin/'.$data['table']);
+});
 
 /*
 |--------------------------------------------------------------------------
