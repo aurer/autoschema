@@ -26,12 +26,11 @@ Route::any('/convert', function(){
 });
 
 
-/*
 Route::get('/', function()
 {
 	return View::make('home.index');
 });
-*/
+
 
 Route::get('admin', function(){
 	$data['tables'] = AutoSchema::tables_in_definition();
@@ -78,7 +77,7 @@ Route::post('admin/(:any)/add', function()
 			DB::table($data['table'])->insert($input);
 		}
 	}
-	return Redirect::back();
+	return Redirect::to('/admin/'.$data['table']);
 });
 
 Route::get('admin/(:any)/(:num)/edit', function()
