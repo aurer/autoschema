@@ -37,6 +37,13 @@ class AutoForm{
 			if( isset($column['rules']) ){
 				$rules[$column['name']] = $column['rules'];
 			}
+			if( isset($column['type']) && $column['type'] == 'integer' ){
+				if( isset($rules[$column['name']]) ) {
+					$rules[$column['name']] .= '|numeric';
+				} else {
+					$rules[$column['name']] = 'numeric';
+				}
+			}
 		}
 		return $rules;
 	}
@@ -46,9 +53,16 @@ class AutoForm{
 	 *
 	 * @return string
 	 **/
-	public function element($definition, $value)
+	public function form_element($definition, $value=null, $fallback=null)
 	{	
-		$value = empty($value) ? $definition->value : $value;
+		if( is_null($value) ){
+			$value = $fallback;
+		}
+		
+		if( is_null($value) ){
+			$value = $definition->value;
+		}
+
 		if( $definition->type == 'textarea' ){
 			return Form::textarea($definition->name, $value, $definition->attributes);
 		}
@@ -65,12 +79,23 @@ class AutoForm{
 	 *
 	 * @return string
 	 **/
-	public function form_field($value)
+	public function form_field($value=null)
 	{
+		foreach (array_reverse(func_get_args()) as $arg) {
+			if( isset($arg) ){
+				$value = $arg;
+				break;
+			}
+		}
+		
+		$errors = \Laravel\Session::get('errors');
 		$definition = $this->translate_for_form($this->definition);
 		$html = '<div class="field type-' . $definition->type . '">' . "\n";
 		$html .= "\t" . '<div class="label">' . Form::label($definition->attributes['id'], $definition->label) . '</div>' . "\n";
-		$html .= "\t" . '<div class="input">' . $this->element($definition, $value) . '</div>' . "\n";
+		$html .= "\t" . '<div class="input">' . $this->form_element($definition, $value) . '</div>' . "\n";
+		if( $errors && $errors->has( $definition->name ) ){
+			$html .= '<div class="error">' . $errors->first( $definition->name ) . '</div>';
+		}
 		$html .= '</div>' . "\n";
 		return $html;
 	}
@@ -106,6 +131,9 @@ class AutoForm{
 				}
 				$definition->values;
 			}
+		}
+		if( $definition->name == 'password' || (isset($definition->password) && $definition->password == true) ){
+			$definition->type = 'password';
 		}
 
 		$definition->attributes = array(
