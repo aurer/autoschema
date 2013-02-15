@@ -49,6 +49,31 @@ class AutoForm{
 	}
 
 	/**
+	 * Filter input from a request to prepare it for an insert or update statment
+	 *
+	 * @param  string $table
+	 * @param  array  $input
+	 * @return array
+	 */
+	public static function filter_input($table, $input=array())
+	{
+		$definition = AutoSchema::get_table_definition($table);
+		
+		$filtered = array();
+		foreach ($definition->columns as $column) {
+			$name = $column['name'];
+			if( isset($input[$name]) ){
+				$filtered[$name] = $input[$name];
+			}
+			if( $column['type'] == 'boolean' ){
+				$filtered[$name] = isset($input[$name]) ? true : false;
+			}
+		}
+
+		return $filtered;
+	}
+
+	/**
 	 * Builds the HTML form element based on a predefined definition
 	 *
 	 * @return string
