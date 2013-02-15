@@ -26,10 +26,12 @@ Route::any('/convert', function(){
 });
 
 
+/*
 Route::get('/', function()
 {
 	return View::make('home.index');
 });
+*/
 
 
 Route::get('admin', function(){
@@ -37,19 +39,19 @@ Route::get('admin', function(){
 	return View::make('admin/index')->with($data);
 });
 
-Route::get('admin/(:any)', function()
+Route::get('admin/(:any)', function($table)
 {
-	$data['table'] = URI::segment(2);
-	$data['items'] = DB::table($data['table'])->order_by('id')->get();
-	$data['title_columns'] = AutoSchema::get_table_definition($data['table'])->settings->title_columns;
+	$data['table'] = $table;
+	$data['items'] = DB::table($table)->order_by('id')->get();
+	$data['title_columns'] = AutoSchema::get_table_definition($table)->settings->title_columns;
 	return View::make('admin/list')->with($data);
 });
 
-Route::get('admin/(:any)/add', function()
+Route::get('admin/(:any)/add', function($table)
 {
-	$data['table'] = URI::segment(2);
-	$fields = AutoSchema::get_table_definition($data['table'])->columns;
-	$data['rules'] = AutoSchema\AutoForm::table_rules($data['table']);
+	$data['table'] = $table;
+	$fields = AutoSchema::get_table_definition($table)->columns;
+	$data['rules'] = AutoSchema\AutoForm::table_rules($table);
 	foreach ($fields as $value) {
 		if( !in_array($value['name'], array('id', 'created_at', 'updated_at') ) ){
 			$data['fields'][] = $value;
@@ -58,11 +60,11 @@ Route::get('admin/(:any)/add', function()
 	return View::make('admin/add')->with($data);
 });
 
-Route::post('admin/(:any)/add', function()
+Route::post('admin/(:any)/add', function($table)
 {
-	$data['table'] = URI::segment(2);
-	$data['rules'] = AutoSchema\AutoForm::table_rules($data['table']);
-	$input = Input::all();
+	$data['table'] = $table;
+	$data['rules'] = AutoSchema\AutoForm::table_rules($table);
+	$input = AutoSchema\AutoForm::filter_input($table, Input::all());
 	$validation = Validator::make($input, $data['rules']);
 	if ($validation->fails())
 	{
@@ -71,36 +73,37 @@ Route::post('admin/(:any)/add', function()
 	else
 	{
 		if( isset($input['id'] ) ){
-			DB::table($data['table'])->where('id', '=', $input['id'])->update($input);
+			DB::table($table)->where('id', '=', $input['id'])->update($input);
 		}
 		else{
-			DB::table($data['table'])->insert($input);
+			DB::table($table)->insert($input);
 		}
 	}
 	return Redirect::to('/admin/'.$data['table']);
 });
 
-Route::get('admin/(:any)/(:num)/edit', function()
+Route::get('admin/(:any)/(:num)/edit', function($table, $id)
 {
-	$data['table'] = URI::segment(2);
-	$data['id'] = URI::segment(3);
-	$data['item'] = DB::table($data['table'])->where_id($data['id'])->first();
+	$data['table'] = $table;
+	$data['id'] = $id;
+	$data['item'] = DB::table($table)->where_id($id)->first();
 	$data['rules'] = AutoSchema\AutoForm::table_rules($data['table']);
-	$fields = AutoSchema::get_table_definition($data['table'])->columns;
+	$fields = AutoSchema::get_table_definition($table)->columns;
 	foreach ($fields as $value) {
 		if( !in_array($value['name'], array('id', 'created_at', 'updated_at') ) ){
 			$data['fields'][] = $value;
 		}
 	}
+	Log::notice('Test');
 	return View::make('admin/edit')->with($data);
 });
 
-Route::any('admin/(:any)/(:num)/update', function()
+Route::any('admin/(:any)/(:num)/update', function($table, $id)
 {
 	$data['table'] = URI::segment(2);
 	$data['id'] = URI::segment(3);
-	$rules = AutoSchema\AutoForm::table_rules($data['table']);	
-	$input = Input::all();
+	$rules = AutoSchema\AutoForm::table_rules($table);	
+	$input = AutoSchema\AutoForm::filter_input($table, Input::all());
 	$validation = Validator::make($input, $rules);
 	if ($validation->fails())
 	{
@@ -108,9 +111,14 @@ Route::any('admin/(:any)/(:num)/update', function()
 	}
 	else
 	{
-		DB::table($data['table'])->where_id($data['id'])->update($input);
+		DB::table($table)->where_id($id)->update($input);
 	}
-	return Redirect::to('/admin/'.$data['table']);
+	return Redirect::to("/admin/$table");
+});
+
+Route::get('admin/(:any)/(:num)/delete', function($table, $id){
+	DB::table($table)->delete($id);
+	return Redirect::to("/admin/$table");
 });
 
 /*
