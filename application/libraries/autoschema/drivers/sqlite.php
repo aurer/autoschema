@@ -14,14 +14,11 @@ class SQLite implements Driver{
 		if( !$schema ) return false;
 
 		$command = "CREATE TABLE IF NOT EXISTS " . $schema->name . " (\n";
-			foreach ($schema->columns as $column) {
-				$command .= "\t" . static::column_definition($column) . ",\n";
-			}
-		if( !empty($schema->primary_key) ){
-			$command .= "\tPRIMARY KEY (" . $schema->primary_key . ")\n";
-		} else {
-			$command = rtrim($command, ",\n") . "\n"; // Remove the previous comma
+		foreach ($schema->columns as $column) {
+			$command .= "\t" . static::column_definition($column) . ",\n";
 		}
+		
+		$command = rtrim($command, ",\n") . "\n"; // Remove the previous comma
 		$command .= ");\n";
 		Log::AutoSchema($command);
 		return DB::query($command);
@@ -64,7 +61,7 @@ class SQLite implements Driver{
 		$definition = $column['name'] . " ";
 		$types = array(
 			'string'	=> 'VARCHAR',
-			'integer'	=> 'INT',
+			'integer'	=> 'INTEGER',
 			'float'		=> 'FLOAT',
 			'decimal'	=> 'DECIMAL',
 			'text'		=> 'TEXT',
@@ -94,7 +91,7 @@ class SQLite implements Driver{
 
 		// Add auto increment if it's set
 		if( isset($column['increment']) && $column['increment'] == true ){
-			$definition .= ' AUTO_INCREMENT';
+			$definition .= ' PRIMARY KEY AUTOINCREMENT';
 		}
 
 		return trim($definition);
@@ -113,7 +110,9 @@ class SQLite implements Driver{
 		$command = "SELECT * FROM sqlite_master WHERE type = 'table'";
 		$result = DB::query($command);
 		foreach ($result as $table) {
-			$tables[] = $table->name;
+			if( $table->name !== 'sqlite_sequence'){
+				$tables[] = $table->name;
+			}
 		}	
 		return $tables;
 	}
@@ -151,6 +150,7 @@ class SQLite implements Driver{
 			'tinyint'	=> 'boolean',
 			'timestamp'	=> 'timestamp',
 			'int' 		=> 'integer',
+			'integer' 	=> 'integer',
 			'blob' 		=> 'blob',
 		);
 		$database = Config::get('database.connections');
@@ -246,6 +246,7 @@ class SQLite implements Driver{
 		$translate['definition'] = array(
 			'VARCHAR' 		=> 'string',
 			'INT' 			=> 'integer',
+			'INTEGER' 		=> 'integer',
 			'FLOAT' 		=> 'float',
 			'DECIMAL' 		=> 'decimal',
 			'TEXT' 			=> 'text',
@@ -257,7 +258,7 @@ class SQLite implements Driver{
 
 		$translate['database'] = array(
 			'string'	=> 'VARCHAR' . $length,
-			'integer'	=> 'INT' . $length,
+			'integer'	=> 'INTEGER' . $length,
 			'float'		=> 'FLOAT',
 			'decimal'	=> 'DECIMAL',
 			'text'		=> 'TEXT' . $length,
