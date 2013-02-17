@@ -199,9 +199,10 @@ class Table
 					break;
 				}
 
-				// Check for type changes e.g name is the same but type or length has changed
+				// Check for type changes e.g name is the same but type, length or other propert has changed
 				if( $def_name === $tab_name ){
-					$altered[$tab_name] = $def_def.":".$tab_def;
+					$altered[$tab_name] = "$def_def";
+					\Laravel\Log::AutoSchema("Difference in column '$tab_name'. Definition: $def_def - Table: $tab_def");
 					unset($table_only[$tab_name]);
 					unset($definition_only[$def_name]);
 					break;

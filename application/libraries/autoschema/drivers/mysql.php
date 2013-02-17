@@ -92,6 +92,13 @@ class MySQL implements Driver {
 			$definition .= '(' . $column['precision'] . ',' . $column['scale'] . ')';
 		}
 
+		// Add length if it's set
+		if( isset($column['rules']) && strpos($column['rules'], 'required') !== false ){
+			if( $column['type'] != 'timestamp' && ( !isset($column['increment']) || $column['increment'] != true ) ){
+				$definition .= ' NOT NULL';
+			}
+		}
+
 		// Add auto increment if it's set
 		if( isset($column['increment']) && $column['increment'] == true ){
 			$definition .= ' AUTO_INCREMENT';
@@ -155,8 +162,18 @@ class MySQL implements Driver {
 			$definition['precision'] = $column->data_type == 'decimal' ? $column->numeric_precision : null;
 			$definition['scale']	 = $column->data_type == 'decimal' ? $column->numeric_scale : null;
 			$definition['increment'] = ($column->column_key == 'PRI') ? true : false;
+			
+			// Add rules based on unique key and is_nullable settings
+			$rules = array();
+			if( $column->is_nullable == 'NO' ){
+				$rules[] = 'required';
+			}
+			if( $column->column_key == 'UNI' ){
+				$rules[] = 'unique';
+			}
+			$definition['rules'] = implode('|', $rules);
 
-			if( $definition['type'] == 'text' ){
+			if( $definition['type'] == 'text' || $definition['type'] == 'blob' ){
 				$definition['length'] = null;
 			}
 

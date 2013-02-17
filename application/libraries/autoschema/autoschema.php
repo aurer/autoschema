@@ -129,7 +129,6 @@ class AutoSchema
 		$tables = Cache::get('autoschema_definitions');
 		if( is_array($tables) && array_key_exists($table, $tables) ){
 			return $tables[$table];
-			//return new Table($tables[$table]);
 		} else {
 			Log::notice(__METHOD__ . ": the '$table' table is not defined.");
 			return false;
@@ -363,9 +362,6 @@ class AutoSchema
 		foreach ($schema->columns as $column) {
 			$definition = self::column_definition($column);
 			$name = $column['name'];
-			$length = isset($column['length']) ? $column['length'] : '';
-			$type = $column['type'];
-			//$columns[$name] = trim("$name $type $length");
 			$columns[$name] = $definition;
 		}
 		return $columns;
