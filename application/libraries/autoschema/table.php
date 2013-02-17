@@ -1,6 +1,7 @@
 <?php namespace AutoSchema;
 
-use \AutoSchema\AutoSchema as AutoSchema;
+use \AutoSchema\AutoSchema;
+use \Laravel\Log;
 
 class Table
 {
@@ -189,24 +190,26 @@ class Table
 			
 			// Check for the first database column that matches the definition column type
 			foreach ($table_only as $tab_name => $tab_def) {
-				$tab_type = str_replace("$tab_name ", '', $tab_def); // Remove the name to get just the type and length
-				
-				// Type match so store the column name and remove from the definition and table arrays
+				$tab_type = str_replace("$tab_name ", '', $tab_def); // Remove the name to get just the type ect.
+
+				// If the types match we can assume it's been renamed
 				if( $def_type === $tab_type ){
 					$renamed[$tab_name] = $def_name;
+					Log::AutoSchema("Difference in column name. Definition: $def_name - Table: $tab_name");
 					unset($table_only[$tab_name]);
 					unset($definition_only[$def_name]);
 					break;
 				}
-
-				// Check for type changes e.g name is the same but type, length or other propert has changed
+				
+				// If the names match we can assume it's been altered
 				if( $def_name === $tab_name ){
 					$altered[$tab_name] = "$def_def";
-					\Laravel\Log::AutoSchema("Difference in column '$tab_name'. Definition: $def_def - Table: $tab_def");
+					Log::AutoSchema("Difference in column '$tab_name'. Definition: $def_def - Table: $tab_def");
 					unset($table_only[$tab_name]);
 					unset($definition_only[$def_name]);
 					break;
 				}
+				
 			}
 		}
 
