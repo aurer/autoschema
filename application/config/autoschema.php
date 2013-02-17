@@ -8,7 +8,7 @@ AutoSchema::table('bills', function($table)
     $table->string('name')->rules('required');
     $table->text('comments');
     $table->integer('test');
-    $table->string('amount', 11);
+    $table->decimal('amount', 10, 2);
     $table->string('recurrence'); // Weekly, Monthly or Yearly
     $table->integer('renews_on'); // Weekly = day of week, Monthly/Yearly = day of year
     $table->boolean('send_reminder'); // Should an email reminder be sent
@@ -45,6 +45,21 @@ AutoSchema::table('emails', function($table)
     $table->timestamps();
 }, function($settings){
     $settings->title_columns('email', 'active');
+});
+
+AutoSchema::table('test_table', function($table)
+{
+    $table->increments('id');
+    $table->string('a_string')          ->label('String')   ->rules('required|unique');
+    $table->integer('an_integer')       ->label('Integer')  ->rules('required');
+    $table->float('a_float', 10, 2)     ->label('Float')    ->rules('');
+    $table->decimal('a_decimal', 10, 2) ->label('Decimal')  ->rules('required');
+    $table->text('a_text')              ->label('Text')     ->rules('required');
+    $table->boolean('a_boolean')        ->label('Boolean')  ->rules('required');
+    $table->date('a_date')              ->label('Date')     ->rules('required');
+    $table->timestamp('a_timestamp')    ->label('Timestamp')->rules('required');
+    $table->blob('a_blob')              ->label('Blob')     ->rules('required');
+    $table->timestamps();
 });
 
 AutoSchema::view('users_vw', function($view){
