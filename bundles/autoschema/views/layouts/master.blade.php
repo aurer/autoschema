@@ -13,7 +13,7 @@
 			<div class="col">
 				<div class="cell">
 					<h1>AutoSchema</h1>
-					<h2>A Laravel Database Management Library</h2>
+					<h2>A Database Management Library for the Laravel framework</h2>
 				</div>
 			</div>
 		</header>

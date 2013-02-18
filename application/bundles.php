@@ -36,4 +36,5 @@
 return array(
 	'docs' => array('handles' => 'docs'),
 	'autoschema' => array( 'handles' => 'autoschema' ),
+	'autoschema-converter' => array( 'handles' => 'autoschema-converter' ),
 );

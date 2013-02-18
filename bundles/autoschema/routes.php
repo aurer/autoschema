@@ -8,7 +8,7 @@ Route::get('(:bundle)', function()
 	AutoSchema::load_definitions();
 	$data['tables'] = AutoSchema::check_tables();
 	$data['views'] = AutoSchema::check_views();
-	return View::make('autoschema::autoschema/index')->with($data);
+	return View::make('autoschema::index')->with($data);
 });
 
 /*

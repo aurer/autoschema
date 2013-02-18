@@ -1,4 +1,4 @@
-@layout('autoschema::layouts/default')
+@layout('autoschema::layouts.master')
 
 @section('main')
 	<h2 class="cell">Tables</h2>

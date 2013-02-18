@@ -7,6 +7,7 @@ use \Laravel\Request as Request;
 use \Laravel\Database as DB;
 use \Lavarel\Path;
 use \Laravel\Bundle;
+
 class AutoSchema
 {
 	protected static $tables = array();

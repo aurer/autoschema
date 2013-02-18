@@ -5,29 +5,10 @@
 | Application Routes
 |--------------------------------------------------------------------------
 */
-Route::get('test', function(){
-
-	//print_r(Bundle::$bundles);
-	AutoSchema::load_definitions();
-	//print_r(AutoSchema::get_table_definition('pages'));
-});
-
-Route::any('/convert', function(){
-	
-	if( Input::file('file') )
-	{
-		$result = AutoSchemaConverter::convert_file( Input::file('file.tmp_name') );
-		return View::make('convert.index')->with('result', $result);
-	}
-	else
-	{
-		return View::make('convert.index');
-	}
-});
 
 Route::get('/', function()
 {
-	return View::make('home.index');
+	return Redirect::to('autoschema');
 });
 
 
