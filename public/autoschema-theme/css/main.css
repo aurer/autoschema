@@ -329,23 +329,3 @@ table.layout td {
   text-align: left;
   vertical-align: top;
 }
-
-table.display{
-  width: 100%;
-}
-
-table.database{
-  margin: 1em 0;
-  border-collapse: collapse;
-}
-
-table.database thead th,
-table.database thead td{
-  background: #eee;
-  font-weight: bold;
-}
-
-table.database td{
-  border: 1px solid #ccc;
-  padding: .6em 1em;
-}

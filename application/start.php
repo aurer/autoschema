@@ -171,8 +171,3 @@ if ( ! Request::cli() and Config::get('session.driver') !== '')
 {
 	Session::load();
 }
-
-
-function Markdown($text) {
-	return MarkdownExtra::parse($text);
-}
