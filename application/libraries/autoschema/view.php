@@ -40,7 +40,7 @@ class View
 			$definition = $this->definition;
 			$matches = array();
 			foreach ($tables as $key => $val) {
-				if( strpos($definition, " $val ") ){
+				if( strpos($definition, " $val") ){
 					$matches[] = $tables[$key];
 				}
 			}
