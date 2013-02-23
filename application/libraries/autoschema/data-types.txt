@@ -1,0 +1,109 @@
+pqsql
+
+	bigint
+	int8
+	bigserial
+	serial8
+	bit(n)
+	bit varying(n)
+	varbit
+	boolean
+	bool
+	box
+	bytea
+	character varying(n)
+	varchar(n)
+	character(n)
+	char(n)
+	cidr
+	circle
+	date
+	double precision
+	float8
+	inet
+	integer
+	int
+	int4
+	interval(p)
+	line
+	lseg
+	macaddr
+	money
+	numeric(p,s)
+	decimal(p,s)
+	path
+	point
+	polygon
+	real
+	float4
+	smallint
+	int2
+	serial
+	serial4
+	text
+	time(p)
+	timez
+	time(p) without time zone
+	time(p) with time zone
+	timestamp(p)
+	timestampz
+	timestamp(p) without time zone
+	timestamp(p) with time zone
+
+myqsl
+
+	CHAR(size)
+	VARCHAR(size)
+	TINYTEXT
+	TEXT
+	BLOB
+	MEDIUMTEXT
+	MEDIUMBLOB
+	LONGTEXT
+	LONGBLOB
+	ENUM(x,y,z,etc.)
+	SET
+	TINYINT(size)
+	SMALLINT(size)
+	MEDIUMINT(size)
+	INT(size)
+	BIGINT(size)
+	FLOAT(size,d)
+	DOUBLE(size,d)
+	DECIMAL(size,d)
+	DATE()
+	DATETIME()
+	TIMESTAMP()
+	TIME()
+	YEAR()
+
+sqlite
+
+	INT
+	INTEGER
+	TINYINT
+	SMALLINT
+	MEDIUMINT
+	BIGINT
+	UNSIGNED BIG INT
+	INT2
+	INT8
+	CHARACTER(20)
+	VARCHAR(255)
+	VARYING CHARACTER(255)
+	NCHAR(55)
+	NATIVE CHARACTER(70)
+	NVARCHAR(100)
+	TEXT
+	CLOB
+	BLOB
+	REAL
+	DOUBLE
+	DOUBLE PRECISION
+	FLOAT
+	NUMERIC
+	DECIMAL(10,5)
+	BOOLEAN
+	DATE
+	DATETIME
+	BLOB
