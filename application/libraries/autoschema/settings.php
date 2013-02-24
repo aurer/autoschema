@@ -1,6 +1,14 @@
 <?php namespace AutoSchema;
 
 class Settings{
+	
+	/**
+	 * Allows generating of additional settings information for an AutoSchema table definition
+	 *
+	 * @param  string 	$name
+	 * @param  array 	$args
+	 * @return Settings
+	 */
 	function __call($name, $args)
 	{
 		if( count($args) == 1){

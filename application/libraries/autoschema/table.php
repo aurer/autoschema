@@ -9,6 +9,11 @@ class Table
 	public $primary_key;
 	public $columns;
 
+	/**
+	 * Create a new Table instance
+	 *
+	 * @return void
+	 **/
 	public function __construct($name)
 	{
 		$this->name = $name;
@@ -16,89 +21,184 @@ class Table
 		return $definition ? $definition : $this;
 	}
 
+	/**
+	 * Define a string column
+	 *
+	 * @param  string $name
+	 * @param  int $length
+	 * @return Autoschema\Table
+	 */
 	public function string($name, $length = 200)
 	{
 		return $this->column(__FUNCTION__, compact('name', 'length'));
 	}
 
+	/**
+	 * Define a integer column
+	 *
+	 * @param  string $name
+	 * @param  boolean $increment
+	 * @return Autoschema\Table
+	 */
 	public function integer($name, $increment = false)
 	{
 		return $this->column(__FUNCTION__, compact('name', 'increment'));
 	}
 
+	/**
+	 * Define a float column
+	 *
+	 * @param  string $name
+	 * @return Autoschema\Table
+	 */
 	public function float($name)
 	{
 		return $this->column(__FUNCTION__, compact('name'));
 	}
 
+	/**
+	 * Define a decimal column
+	 *
+	 * @param  string $name
+	 * @param  int $precision
+	 * @param  int $scale
+	 * @return Autoschema\Table
+	 */
 	public function decimal($name, $precision, $scale)
 	{
 		return $this->column(__FUNCTION__, compact('name', 'precision', 'scale'));
 	}
 
+	/**
+	 * Define a text column
+	 *
+	 * @param  string $name
+	 * @return Autoschema\Table
+	 */
 	public function text($name)
 	{
 		return $this->column(__FUNCTION__, compact('name'));
 	}
 
+	/**
+	 * Define a boolean column
+	 *
+	 * @param  string $name
+	 * @return Autoschema\Table
+	 */
 	public function boolean($name)
 	{
 		return $this->column(__FUNCTION__, compact('name'));
 	}
 
+	/**
+	 * Define a date column
+	 *
+	 * @param  string $name
+	 * @return Autoschema\Table
+	 */
 	public function date($name)
 	{
 		return $this->column(__FUNCTION__, compact('name'));
 	}
 
+	/**
+	 * Define a timestamp column
+	 *
+	 * @param  string $name
+	 * @return Autoschema\Table
+	 */
 	public function timestamp($name)
 	{
 		return $this->column(__FUNCTION__, compact('name'));
 	}
 
+	/**
+	 * Define a blob column
+	 *
+	 * @param  string $name
+	 * @return Autoschema\Table
+	 */
 	public function blob($name)
 	{
 		return $this->column(__FUNCTION__, compact('name'));
 	}
 
+	/**
+	 * Define an auto incrementing column
+	 *
+	 * @param  string $name
+	 * @param  int $name
+	 * @return Autoschema\Table
+	 */
 	public function increments($name)
 	{
 		$this->primary_key($name);
 		return $this->integer($name, true);
 	}
 
+	/**
+	 * Define a the tables created_at and updated_at timestamp columns
+	 *
+	 * @return Autoschema\Table
+	 */
 	public function timestamps()
 	{
 		$this->timestamp('created_at');
 		$this->timestamp('updated_at');
-	}
-
-	public function primary_key($arg)
-	{	
-		$this->primary_key = $arg;
 		return $this;
 	}
 
-	public function label($arg)
+	/**
+	 * Define a primary key for the table
+	 *
+	 * @param  string $name
+	 * @return Autoschema\Table
+	 */
+	public function primary_key($name)
+	{	
+		$this->primary_key = $name;
+		return $this;
+	}
+
+	/**
+	 * Define a column label
+	 *
+	 * @param  string $label
+	 * @return Autoschema\Table
+	 */
+	public function label($label)
 	{	
 		$col = array_pop($this->columns);
-		$col[__FUNCTION__] = $arg;
+		$col[__FUNCTION__] = $label;
 		$this->columns[] = $col;
 		return $this;
 	}
 
-	public function rules($arg)
+	/**
+	 * Define the validation rules for a column
+	 *
+	 * @param  string $rules
+	 * @return Autoschema\Table
+	 */
+	public function rules($rules)
 	{	
 		$col = array_pop($this->columns);
-		$col[__FUNCTION__] = $arg;
+		$col[__FUNCTION__] = $rules;
 		$this->columns[] = $col;
 		return $this;
 	}
 
-	public function values($arg)
+	/**
+	 * Define an the possible values for a table
+	 *
+	 * @param  mixed $values
+	 * @return Autoschema\Table
+	 */
+	public function values($values)
 	{	
 		$col = array_pop($this->columns);
-		$col[__FUNCTION__] = $arg;
+		$col[__FUNCTION__] = $values;
 		$this->columns[] = $col;
 		return $this;
 	}
@@ -106,7 +206,7 @@ class Table
 	/**
 	 * Create an extra attribute to the table definition.
 	 *
-	 * @param  mixed   $parameters
+	 * @param  mixed $parameters
 	 * @return Definition
 	 */
 	public function __call($name, $args)
@@ -124,7 +224,7 @@ class Table
 	 *
 	 * @param  string  $type
 	 * @param  array   $parameters
-	 * @return Fluent
+	 * @return Table
 	 */
 	protected function column($type, $parameters = array())
 	{
@@ -150,6 +250,12 @@ class Table
 		return $this;
 	}
 
+	/**
+	 * Get the differences between a table definition and the database
+	 *
+	 * @param  string  $name
+	 * @return array
+	 */
 	public static function check($name)
 	{
 		$columns_in_definition 	= AutoSchema::columns_in_definition($name);
@@ -176,6 +282,12 @@ class Table
 		return $errors;
 	}
 
+	/**
+	 * Check a table definition against the database
+	 *
+	 * @param  string  $name
+	 * @return array
+	 */
 	public static function diff_columns($definition, $table)
 	{
 		$definition_only 	= array_diff($definition, $table);
@@ -220,10 +332,23 @@ class Table
 		return $changes;
 	}
 
+	/**
+	 * Set an attribute of the table
+	 *
+	 * @param  string  $item
+	 * @param  string  $value
+	 * @return void
+	 */
 	public function __set($item, $value){
-		return $this->$item = $value;
+		$this->$item = $value;
 	}
 
+	/**
+	 * Get an attribute of the table
+	 *
+	 * @param  string  $item
+	 * @return mixed
+	 */
 	public function __get($item){
 		if( isset($this->$item)){
 			return $this->$item;

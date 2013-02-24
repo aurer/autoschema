@@ -4,6 +4,11 @@ use \AutoSchema\AutoSchema as AutoSchema;
 
 class View
 {
+	/**
+	 * Create a new View instance
+	 *
+	 * @return void
+	 **/
 	function __construct($name)
 	{
 		$this->name = $name;
@@ -11,6 +16,11 @@ class View
 		return $definition ? $definition : $this;
 	}
 
+	/**
+	 * Define a view
+	 *
+	 * @return View
+	 **/
 	function definition($definition)
 	{	
 		$this->definition = $definition;
@@ -18,6 +28,12 @@ class View
 		return $this;
 	}
 
+	/**
+	 * Add dependancies to the view definition
+	 *
+	 * @param  array $tables
+	 * @return View
+	 **/
 	public function depends_on($tables)
 	{
 		if( is_array($tables) ){
@@ -28,11 +44,11 @@ class View
 		return $this;
 	}
 
-	public function check()
-	{
-
-	}
-
+	/**
+	 * Auto matically find dependancies for the view definition
+	 *
+	 * @return View
+	 **/
 	protected function get_dependant_tables()
 	{
 		$tables = AutoSchema::tables_in_definition();

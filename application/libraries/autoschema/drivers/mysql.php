@@ -8,6 +8,12 @@ use \Laravel\Log;
 
 class MySQL extends Driver {
 
+	/**
+	 * Create a table based on a schema definition
+	 *
+	 * @param  string $table
+	 * @return void
+	 **/
 	public static function create_table($table)
 	{
 		$schema = AutoSchema::get_table_definition($table);
@@ -30,6 +36,12 @@ class MySQL extends Driver {
 		return self::command($command);
 	}
 
+	/**
+	 * Create a view based on a schema definition
+	 *
+	 * @param  string $view
+	 * @return boolean
+	 **/
 	public static function create_view($name)
 	{
 		$schema = AutoSchema::get_view_definition($name);
@@ -40,6 +52,12 @@ class MySQL extends Driver {
 		return self::command($command);
 	}
 
+	/**
+	 * Drop a table from the database
+	 *
+	 * @param  string $table
+	 * @return boolean
+	 **/
 	public static function drop_table($table)
 	{	
 		// Don't drop it, if it's in the definitions
@@ -51,6 +69,12 @@ class MySQL extends Driver {
 		return self::command($command);
 	}
 
+	/**
+	 * Drop a view from the database
+	 *
+	 * @param  string $view
+	 * @return boolean
+	 **/
 	public static function drop_view($view)
 	{	
 		// Don't drop it, if it's in the definitions
@@ -62,6 +86,25 @@ class MySQL extends Driver {
 		return self::command($command);
 	}
 
+	/**
+	 *
+	 * Called only within this class this method does not make sure the view is not defined before dropping it
+	 *
+	 * @param string $view
+	 *
+	 */
+	protected static function force_drop_view($view)
+	{
+		$command = "DROP VIEW " . $view . "\n";
+		return self::command($command);	
+	}
+
+	/**
+	 * Retrive a column definition string
+	 *
+	 * @param  array $column
+	 * @return boolean
+	 **/
 	public static function column_definition( $column=array() )
 	{
 		$definition = $column['name'] . ' ' . static::column_type_for_db($column);
@@ -81,6 +124,11 @@ class MySQL extends Driver {
 		return trim($definition);
 	}
 
+	/**
+	 * Get an array of table names in the database
+	 *
+	 * @return array
+	 **/
 	public static function tables_in_database()
 	{	
 		$tables = array();
@@ -93,6 +141,11 @@ class MySQL extends Driver {
 		return $tables;
 	}
 
+	/**
+	 * Get an array of view names in the database
+	 *
+	 * @return array
+	 **/
 	public static function views_in_database()
 	{	
 		$views = array();
@@ -254,7 +307,6 @@ class MySQL extends Driver {
 	 * Drop and re-create a view
 	 *
 	 * @param string $view
-	 *
 	 */
 	public static function update_view($view)
 	{
@@ -329,7 +381,6 @@ class MySQL extends Driver {
 	 * Run a SQL command through lavavels database class and log the query
 	 *
 	 * @param string $command
-	 *
 	 * @return mixed
 	 */
 	protected static function command($command, $arguments = null)

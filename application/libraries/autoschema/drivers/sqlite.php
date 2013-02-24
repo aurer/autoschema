@@ -8,6 +8,12 @@ use \Laravel\Log;
 
 class SQLite extends Driver{
 
+	/**
+	 * Create a table based on a schema definition
+	 *
+	 * @param  string $table
+	 * @return void
+	 **/
 	public static function create_table($table)
 	{
 		$schema = AutoSchema::get_table_definition($table);
@@ -24,9 +30,15 @@ class SQLite extends Driver{
 		return self::command($command);
 	}
 
-	public static function create_view($name)
+	/**
+	 * Create a view based on a schema definition
+	 *
+	 * @param  string $view
+	 * @return boolean
+	 **/
+	public static function create_view($view)
 	{
-		$schema = AutoSchema::get_view_definition($name);
+		$schema = AutoSchema::get_view_definition($view);
 		if( !$schema ) return false;
 
 		$command = "CREATE VIEW " . $schema->name . " AS " . $schema->definition . "\n";
@@ -34,6 +46,12 @@ class SQLite extends Driver{
 		return self::command($command);
 	}
 
+	/**
+	 * Drop a table from the database
+	 *
+	 * @param  string $table
+	 * @return boolean
+	 **/
 	public static function drop_table($table)
 	{	
 		// Don't drop it, if it's in the definitions
@@ -45,6 +63,12 @@ class SQLite extends Driver{
 		return self::command($command);
 	}
 
+	/**
+	 * Drop a view from the database
+	 *
+	 * @param  string $view
+	 * @return boolean
+	 **/
 	public static function drop_view($view)
 	{	
 		// Don't drop it, if it's in the definitions
@@ -56,6 +80,12 @@ class SQLite extends Driver{
 		return self::command($command);
 	}
 
+	/**
+	 * Retrive a column definition string
+	 *
+	 * @param  array $column
+	 * @return boolean
+	 **/
 	public static function column_definition( $column=array() )
 	{
 		$definition = $column['name'] . ' ' . static::column_type_for_db($column);
@@ -68,6 +98,11 @@ class SQLite extends Driver{
 		return trim($definition);
 	}
 
+	/**
+	 * Get an array of table names in the database
+	 *
+	 * @return array
+	 **/
 	public static function tables_in_database()
 	{	
 		$config = Config::get('database.connections');
@@ -88,6 +123,12 @@ class SQLite extends Driver{
 		return $tables;
 	}
 
+	/**
+	 * Get an array of views in the database
+	 *
+	 * @param  string $view
+	 * @return boolean
+	 **/
 	public static function views_in_database()
 	{	
 		$config = Config::get('database.connections');

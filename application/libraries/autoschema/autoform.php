@@ -10,6 +10,7 @@ class AutoForm{
 	/**
 	 * Set the definition of the form element
 	 *
+	 * @param  object $definition
 	 * @return void
 	 **/
 	public function __construct($definition)
@@ -18,17 +19,23 @@ class AutoForm{
 	}
 
 	/**
-	 * 
+	 * Create a new instance of this class allowing it to be created via a static call.
 	 *
-	 * @return AutoForm
-	 **/
+	 * @param  string 	$table
+	 * @return array
+	 */
 	public static function field($table, $column, $showall=false)
 	{
 		$definition = AutoSchema::column_in_definition($table, $column);
 		return new AutoForm((object)$definition);
 	}
 
-
+	/**
+	 * Return the columns for a given table.
+	 *
+	 * @param  string 	$table
+	 * @return array
+	 */
 	public static function table_rules($table)
 	{
 		$definition = AutoSchema::get_table_definition($table);
@@ -239,7 +246,6 @@ class AutoForm{
 	 * @param  type string
 	 * @param  html boolean
 	 * @return string
-	 * @author Phil Maurer
 	 **/
 	protected static function translate($type, $html5=false)
 	{
@@ -278,6 +284,12 @@ class AutoForm{
 		}
 	}
 
+	/**
+	 * Allow overloaded calls to set an attribute on the form class
+	 *
+	 * @param  string 	$table
+	 * @return array
+	 */
 	public function __call($name, $value)
 	{
 		$this->definition['attributes'][$name] = $value[0];
