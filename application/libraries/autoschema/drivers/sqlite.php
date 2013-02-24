@@ -6,7 +6,7 @@ use \Laravel\Database as DB;
 use \Laravel\Config;
 use \Laravel\Log;
 
-class SQLite implements Driver{
+class SQLite extends Driver{
 
 	public static function create_table($table)
 	{
@@ -20,8 +20,8 @@ class SQLite implements Driver{
 		
 		$command = rtrim($command, ",\n") . "\n"; // Remove the previous comma
 		$command .= ");\n";
-		Log::AutoSchema($command);
-		return DB::query($command);
+		
+		return self::command($command);
 	}
 
 	public static function create_view($name)
@@ -30,8 +30,8 @@ class SQLite implements Driver{
 		if( !$schema ) return false;
 
 		$command = "CREATE VIEW " . $schema->name . " AS " . $schema->definition . "\n";
-		Log::AutoSchema($command);
-		return DB::query($command);
+		
+		return self::command($command);
 	}
 
 	public static function drop_table($table)
@@ -41,8 +41,8 @@ class SQLite implements Driver{
 		if( $schema ) return false;
 
 		$command = "DROP TABLE IF EXISTS " . $table . "\n";
-		Log::AutoSchema($command);
-		return DB::query($command);
+		
+		return self::command($command);
 	}
 
 	public static function drop_view($view)
@@ -52,42 +52,13 @@ class SQLite implements Driver{
 		if( $schema ) return false;
 
 		$command = "DROP VIEW IF EXISTS " . $view . "\n";
-		Log::AutoSchema($command);
-		return DB::query($command);
+		
+		return self::command($command);
 	}
 
 	public static function column_definition( $column=array() )
 	{
-		$definition = $column['name'] . " ";
-		$types = array(
-			'string'	=> 'VARCHAR',
-			'integer'	=> 'INTEGER',
-			'float'		=> 'FLOAT',
-			'decimal'	=> 'DECIMAL',
-			'text'		=> 'TEXT',
-			'boolean'	=> 'TINYINT(1)',
-			'date'		=> 'DATE',
-			'timestamp'	=> 'TIMESTAMP',
-			'blob'		=> 'BLOB',
-			'default'	=> 'VARCHAR(200)',
-		);
-
-		// Set the type
-		if( array_key_exists($column['type'], $types) ){
-			$definition .= $types[$column['type']];
-		} else {
-			$definition .= $types['default'];
-		}
-
-		// Add length if it's set
-		if( isset($column['length']) ){
-			$definition .= '(' . $column['length'] . ')';
-		}
-
-		// Add precision and scale if they're present
-		if( isset($column['precision']) && isset($column['scale']) ){
-			$definition .= '(' . $column['precision'] . ',' . $column['scale'] . ')';
-		}
+		$definition = $column['name'] . ' ' . static::column_type_for_db($column);
 
 		// Add auto increment if it's set
 		if( isset($column['increment']) && $column['increment'] == true ){
@@ -108,7 +79,7 @@ class SQLite implements Driver{
 		if( file_get_contents($database_file) == '' ) return array();
 
 		$command = "SELECT * FROM sqlite_master WHERE type = 'table'";
-		$result = DB::query($command);
+		$result = self::command($command);
 		foreach ($result as $table) {
 			if( $table->name !== 'sqlite_sequence'){
 				$tables[] = $table->name;
@@ -128,7 +99,7 @@ class SQLite implements Driver{
 		if( file_get_contents($database_file) == '' ) return array();
 
 		$command = "SELECT * FROM sqlite_master WHERE type = 'view'";
-		$result = DB::query($command);
+		$result = self::command($command);
 		foreach ($result as $view) {
 			$views[] = $view->name;
 		}	
@@ -144,26 +115,20 @@ class SQLite implements Driver{
 	public static function columns_in_table($table)
 	{
 		$columns = array();
-		$translate = array(
-			'varchar' 	=> 'string',
-			'text' 		=> 'text',
-			'tinyint'	=> 'boolean',
-			'timestamp'	=> 'timestamp',
-			'int' 		=> 'integer',
-			'integer' 	=> 'integer',
-			'blob' 		=> 'blob',
-		);
 		$database = Config::get('database.connections');
 		$result = self::raw_query("PRAGMA table_info($table);");
 		foreach ($result as $column) {
 			
 			$definition['name']		 = $column->name;
-			$definition['type']		 = $translate[ preg_match('/^[\w]+/', $column->type, $type_match) ? strtolower($type_match[0]) : 'varchar' ];
+			$definition['type']		 = self::column_type_for_definition($column->type);
 			$definition['length']	 = preg_match('/[0-9]+/', $column->type, $len_matches) ? $len_matches[0] : null;
 			$definition['increment'] = ($column->pk == 1) ? true : false;
-
-			if( $definition['type'] == 'text' || $definition['type'] == 'boolean'){
-				$definition['length'] = null;
+			
+			// If the type has two numbers e.g DECIMAL(10,2) then add the precision and scale attributes
+			preg_match_all('/\d+/', $column->type, $matches);
+			if( count($matches[0]) === 2 ){
+				$definition['precision'] = $matches[0][0];
+				$definition['scale']	 = $matches[0][1];
 			}
 
 			$columns[$column->name] = self::column_definition($definition);
@@ -216,8 +181,7 @@ class SQLite implements Driver{
 	public static function update_view($view)
 	{
 		$command = "DROP VIEW IF EXISTS $view";
-		$result = DB::query($command);
-		Log::AutoSchema($command);
+		$result = self::command($command);
 		return self::create_view($view);
 	}
 
@@ -233,47 +197,79 @@ class SQLite implements Driver{
 	}
 
 	/**
-	 * Translate between the definition and database column types.
+	 * Translate a definition data_type to a database version
 	 *
-	 * @param  string 	$table
-	 * @param  string 	$to
-	 * @return array
+	 * @param  array 	$column
+	 * @return string
 	 */
-	private static function translate($column, $to='database')
-	{
-		$length = isset($column['length']) ? '(' . $column['length'] . ')' : '';
-		
-		$translate['definition'] = array(
-			'VARCHAR' 		=> 'string',
-			'INT' 			=> 'integer',
-			'INTEGER' 		=> 'integer',
-			'FLOAT' 		=> 'float',
-			'DECIMAL' 		=> 'decimal',
-			'TEXT' 			=> 'text',
-			'BOOLEAN' 		=> 'boolean',
-			'DATE' 			=> 'date',
-			'TIMESTAMP' 	=> 'timestamp',
-			'BLOB' 			=> 'blob',
-		);
+	protected static function column_type_for_db($column){
+		extract($column);
 
-		$translate['database'] = array(
-			'string'	=> 'VARCHAR' . $length,
-			'integer'	=> 'INTEGER' . $length,
-			'float'		=> 'FLOAT',
-			'decimal'	=> 'DECIMAL',
-			'text'		=> 'TEXT' . $length,
-			'boolean'	=> 'BOOLEAN',
-			'date'		=> 'DATE',
-			'timestamp'	=> 'TIMESTAMP',
-			'blob'		=> 'BLOB',
-		);
+		$length = isset($length) ? "($length)" : "";
+		$precision_and_scale = (isset($precision) && isset($scale) ) ? "($precision, $scale)" : "";
 
-		if( !array_key_exists($column['type'], $translate[$to]) ){
-			return $translate[$to]['default'];
-		}
-		return $translate[$to][$column['type']];
+		$types = array(
+			'blob'			=> 'BLOB',
+			'boolean'		=> 'BOOLEAN',
+			'date'			=> 'DATE',
+			'decimal'		=> 'DECIMAL' . $precision_and_scale,
+			'float'			=> 'FLOAT' . $precision_and_scale,
+			'integer'		=> 'INTEGER',
+			'string'		=> 'VARCHAR' . $length,
+			'text'			=> 'TEXT',
+			'time'			=> 'TIME',
+			'timestamp'		=> 'TIMESTAMP',
+		);
+		return $types[$type];
 	}
 
+	/**
+	 * Translate a database data_type to a simple definition version
+	 *
+	 * @param  string 	$key
+	 * @return string
+	 */
+	protected static function column_type_for_definition($key){
+		$sqlite_types = array(
+			'INT'					=> 'integer',
+			'INTEGER'				=> 'integer',
+			'TINYINT'				=> 'boolean',
+			'SMALLINT'				=> 'integer',
+			'MEDIUMINT'				=> 'integer',
+			'BIGINT'				=> 'integer',
+			'UNSIGNED BIG INT'		=> 'integer',
+			'INT2'					=> 'integer',
+			'INT8'					=> 'integer',
+			'CHARACTER'				=> 'string',
+			'VARCHAR'				=> 'string',
+			'VARYING CHARACTER'		=> 'string',
+			'NCHAR'					=> 'string',
+			'NATIVE CHARACTER'		=> 'string',
+			'NVARCHAR'				=> 'string',
+			'TEXT'					=> 'text',
+			'CLOB'					=> 'blob',
+			'BLOB'					=> 'blob',
+			'REAL'					=> 'integer',
+			'DOUBLE'				=> 'float',
+			'DOUBLE PRECISION'		=> 'float',
+			'FLOAT'					=> 'float',
+			'NUMERIC'				=> 'decimal',
+			'DECIMAL'				=> 'decimal',
+			'BOOLEAN'				=> 'boolean',
+			'DATE'					=> 'date',
+			'DATETIME'				=> 'timestamp',
+			'TIMESTAMP'				=> 'timestamp',
+		);
+		preg_match('/^\\w+/', $key, $matches);
+		return $sqlite_types[$matches[0]];
+	}
+
+	/**
+	 * Perform a database query that laravel can't handle
+	 *
+	 * @param  string 	$query
+	 * @return mixed
+	 */
 	private static function raw_query($query)
 	{
 		$config = Config::get('database.connections');
@@ -292,5 +288,23 @@ class SQLite implements Driver{
 	    {
 	        return array();
 	    }
+	}
+
+	/**
+	 * Run a SQL command through lavavels database class and log the query
+	 *
+	 * @param string $command
+	 *
+	 * @return mixed
+	 */
+	protected static function command($command, $arguments = null)
+	{
+		$result = DB::query($command, $arguments);
+		$profile = DB::profile();
+		Log::AutoSchema( "Command: " . $command );
+		if( count($arguments) ){
+			Log::AutoSchema( "Bindings: " . implode(', ', $arguments) );
+		}
+		return $result;
 	}
 }

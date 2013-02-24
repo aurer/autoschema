@@ -179,7 +179,7 @@ class Postgres extends Driver {
 	 *
 	 * @var string $table
 	 **/
-	public static function drop_views_dependant_on($table)
+	protected static function drop_views_dependant_on($table)
 	{
 		foreach (static::get_dependant_views_for($table) as $view) {
 			echo $view;
@@ -192,7 +192,7 @@ class Postgres extends Driver {
 	 *
 	 * @var string $table
 	 **/
-	public static function create_views_dependant_on($table)
+	protected static function create_views_dependant_on($table)
 	{
 		foreach (static::get_dependant_views_for($table) as $view) {
 			static::create_view($view);
@@ -204,7 +204,7 @@ class Postgres extends Driver {
 	 *
 	 * @var string $table
 	 **/
-	public static function reload_views_dependant_on($table)
+	protected static function reload_views_dependant_on($table)
 	{
 		foreach (static::get_dependant_views_for($table) as $view) {
 			static::update_view($view);
