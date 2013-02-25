@@ -92,7 +92,7 @@ class SQLite extends Driver{
 
 		// Add auto increment if it's set
 		if( isset($column['increment']) && $column['increment'] == true ){
-			$definition .= ' PRIMARY KEY AUTOINCREMENT';
+			$definition .= ' PRIMARY KEY AUTOINCREMENT NOT NULL';
 		}
 
 		return trim($definition);
