@@ -72,22 +72,29 @@ class AutoSchema
 	 */
 	public static function load_definitions()
 	{	
-		$configs = 0;
-		$paths[] = path('app').'config/';
-		if( ! is_null(Request::env() ) ){
-			$paths[] = path('app').'config/'. Request::env() . '/';
-		}
+		$config = Config::get('autoschema');
 
-		foreach (Bundle::$bundles as $name => $bundle) {
-			$paths[] = Bundle::path($name) . 'config/';
-		}
+		$paths[] = path('app') . 'autoschema';
 
-		foreach ($paths as $path) {
-			if( is_file( $path . 'autoschema' . EXT ) ){
-				$configs += 1;
-				require $path . 'autoschema' . EXT;
+		// Include any bundle configs is configured to do this
+		if( $config['include_bundles'] ){
+			foreach (Bundle::$bundles as $name => $bundle) {
+				$paths[] = Bundle::path($name) . 'autoschema/';
 			}
 		}
+
+		// Loop over the paths and check for definition files
+		foreach ($paths as $path) {
+			if( is_dir( $path ) ){
+				foreach( scandir($path) as $file ){
+					if( ends_with($file, '.php') ){
+						require $path . DS . $file;
+					}
+				}
+			}
+		}
+
+		// The definition files will have been run to cache the results
 		static::cache_definitions();
 		return static::$tables;
 	}
