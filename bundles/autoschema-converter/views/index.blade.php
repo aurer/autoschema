@@ -1,4 +1,4 @@
-@layout('layouts.default')
+@layout('autoschema-converter::master')
 
 @section('main')
 	<div class="cell">

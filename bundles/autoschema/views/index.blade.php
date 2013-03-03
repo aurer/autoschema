@@ -2,6 +2,7 @@
 
 @section('main')
 	<h2 class="cell">Tables</h2>
+
 	<table class="layout autoschema">
 		@foreach($tables as $table)
 			<tr class="{{ $table->error_type }}">

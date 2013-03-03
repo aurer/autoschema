@@ -5,7 +5,7 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 	<title>AutoSchema:@yield('pagetitle')</title>
 	<meta name="viewport" content="width=device-width">
-	{{ HTML::style('bundles/autoschema/css/main.css') }}
+	{{ HTML::style('/autoschema-theme/css/main.css') }}
 </head>
 <body>
 	<div class="page">

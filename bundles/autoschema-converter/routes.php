@@ -1,4 +1,4 @@
-<?php
+<?php require 'AutoSchemaConverter.php';
 
 Route::get('(:bundle)', function(){
 	return View::make('autoschema-converter::index');

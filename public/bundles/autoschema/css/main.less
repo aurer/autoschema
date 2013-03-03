@@ -1,0 +1,149 @@
+@import url(normalise.less);
+
+body{
+	color: #445;
+	background: #f4f4f4;
+}
+
+.col{
+	max-width: 60em;
+	margin: 0 auto;
+	overflow: hidden;
+	
+	.cell{
+ 		padding: 0 1em;
+ 	}
+
+ 	h2.cell{
+ 		margin: 0;
+ 		padding: 1em 0.6em;
+ 		background: #eee;
+ 	}
+}
+
+header{
+	background: #333;
+	color: #fff;
+
+	.col{
+		background: #333;
+		color: #fff;
+		border-left: 1px solid #444;
+		border-right: 1px solid #444;
+	}
+	
+	h2{
+		margin: .2em 0 1.3em;
+	}
+
+	a:hover{ text-decoration: none; }
+}
+
+.main .col{
+	border-left: 1px solid #ddd;
+	border-right: 1px solid #ddd;
+}
+footer{
+	border-top: 1px solid #ddd;
+	padding:  1em 0;
+}
+
+h1{
+	font-size: 2.7em;
+	line-height: 1.2;
+	margin-bottom: 0;
+	font-weight: lighter;
+}
+h2{
+	font-style: italic;
+}
+
+table.autoschema{
+	margin: 0;
+	padding: 0;
+	list-style: none;	
+}
+table.autoschema th,
+table.autoschema td{
+    border-top: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+    padding: 1em;
+}
+table.autoschema th.name{
+	border-right: 1px solid #ddd;
+	width: 20%;
+}
+table:last-child th,
+table:last-child td{
+	border-bottom: none;
+}
+table.autoschema h4{
+    float: left;
+    margin: 0;
+    color: #db381d;
+}
+table.autoschema .details ol{
+	list-style: none;
+	float: left;
+	margin: 0;
+	list-style: decimal;
+}
+
+table.autoschema [class*=missing] th,
+table.autoschema [class*=missing] td{
+	background: #eee;
+	color: #777;
+}
+
+table.autoschema .action{
+	text-align: right;
+    vertical-align: middle;
+}
+
+.btn{
+	background: #0093d0;
+	border-radius: 2px;
+	padding: .6em 1em .4em;
+	border: 0;
+	text-decoration: none;
+	font-weight: bold;
+	color: #fff;
+	text-transform: uppercase;
+	font-size: .8em;
+	-webkit-transition: background-color .2s;
+	transition: background-color .2s;
+}
+.btn:hover{
+	background-color: #20bcfd;
+}
+
+.btn-red{
+	background-color: #db381d;
+}
+.btn-red:hover{
+	background-color: #f35136;
+}
+.btn-green{
+	background-color: #4ea829;
+}
+.btn-green:hover{
+	background-color: #5fd12f;
+}
+.btn-grey{
+	background-color: #aaa;
+}
+.btn-grey:hover{
+	background-color: #c3c3c3;
+}
+
+table.layout{
+    width: 100%;
+    border-collapse: collapse;
+}
+table.layout th,
+table.layout td{
+    text-align: left;
+    vertical-align: top;
+}
+
+@import url(form.css);

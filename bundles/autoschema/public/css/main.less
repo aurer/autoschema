@@ -9,28 +9,35 @@ body{
 	max-width: 60em;
 	margin: 0 auto;
 	overflow: hidden;
+	
+	.cell{
+ 		padding: 0 1em;
+ 	}
+
+ 	h2.cell{
+ 		margin: 0;
+ 		padding: 1em 0.6em;
+ 		background: #eee;
+ 	}
 }
- .col .cell{
- 	padding: 0 1em;
- }
 
 header{
 	background: #333;
 	color: #fff;
-}
 
-	header .col{
+	.col{
 		background: #333;
 		color: #fff;
 		border-left: 1px solid #444;
 		border-right: 1px solid #444;
 	}
 	
-	header h2{
+	h2{
 		margin: .2em 0 1.3em;
 	}
 
-	header a:hover{ text-decoration: none; }
+	a:hover{ text-decoration: none; }
+}
 
 .main .col{
 	border-left: 1px solid #ddd;
@@ -138,3 +145,5 @@ table.layout td{
     text-align: left;
     vertical-align: top;
 }
+
+@import url(form.css);

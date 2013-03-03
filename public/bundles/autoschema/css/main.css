@@ -1,0 +1,331 @@
+@import url(form.css);
+/*! normalize.css v2.1.0 | MIT License | git.io/normalize */
+/* ==========================================================================
+   HTML5 display definitions
+   ========================================================================== */
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+main,
+nav,
+section,
+summary {
+  display: block;
+}
+audio,
+canvas,
+video {
+  display: inline-block;
+}
+audio:not([controls]) {
+  display: none;
+  height: 0;
+}
+[hidden] {
+  display: none;
+}
+/* ==========================================================================
+   Base
+   ========================================================================== */
+html {
+  font-family: 'Myriad Pro', HelveticaNeue, sans-serif;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+body {
+  padding: 0;
+  margin: 0;
+}
+/* ==========================================================================
+   Links
+   ========================================================================== */
+a {
+  color: #0093d0;
+  text-decoration: none;
+}
+a:focus {
+  outline: thin dotted;
+}
+a:active,
+a:hover {
+  color: #20bcfd;
+  outline: 0;
+  text-decoration: underline;
+}
+/* ==========================================================================
+   Typography
+   ========================================================================== */
+h1 {
+  font-size: 2em;
+  margin: 0.67em 0;
+}
+abbr[title] {
+  border-bottom: 1px dotted;
+}
+b,
+strong {
+  font-weight: bold;
+}
+dfn {
+  font-style: italic;
+}
+hr {
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+  height: 0;
+}
+mark {
+  background: #ff0;
+  color: #000;
+}
+code,
+kbd,
+pre,
+samp {
+  font-family: monospace, serif;
+  font-size: 1em;
+}
+pre {
+  white-space: pre-wrap;
+}
+q {
+  quotes: "\201C" "\201D" "\2018" "\2019";
+}
+small {
+  font-size: 80%;
+}
+sub,
+sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+sup {
+  top: -0.5em;
+}
+sub {
+  bottom: -0.25em;
+}
+/* ==========================================================================
+   Embedded content
+   ========================================================================== */
+img {
+  border: 0;
+}
+svg:not(:root) {
+  overflow: hidden;
+}
+/* ==========================================================================
+   Figures
+   ========================================================================== */
+figure {
+  margin: 0;
+}
+/* ==========================================================================
+   Forms
+   ========================================================================== */
+fieldset {
+  border: 1px solid #c0c0c0;
+  margin: 0 2px;
+  padding: 0.35em 0.625em 0.75em;
+}
+legend {
+  border: 0;
+  padding: 0;
+}
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: 100%;
+  margin: 0;
+}
+button,
+input {
+  line-height: normal;
+}
+button,
+select {
+  text-transform: none;
+}
+button,
+html input[type="button"],
+input[type="reset"],
+input[type="submit"] {
+  -webkit-appearance: button;
+  cursor: pointer;
+}
+button[disabled],
+html input[disabled] {
+  cursor: default;
+}
+input[type="checkbox"],
+input[type="radio"] {
+  box-sizing: border-box;
+  padding: 0;
+}
+input[type="search"] {
+  -webkit-appearance: textfield;
+  -moz-box-sizing: content-box;
+  -webkit-box-sizing: content-box;
+  box-sizing: content-box;
+}
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+button::-moz-focus-inner,
+input::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}
+textarea {
+  overflow: auto;
+  vertical-align: top;
+}
+/* ==========================================================================
+   Tables
+   ========================================================================== */
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+body {
+  color: #445;
+  background: #f4f4f4;
+}
+.col {
+  max-width: 60em;
+  margin: 0 auto;
+  overflow: hidden;
+}
+.col .cell {
+  padding: 0 1em;
+}
+.col h2.cell {
+  margin: 0;
+  padding: 1em 0.6em;
+  background: #eee;
+}
+header {
+  background: #333;
+  color: #fff;
+}
+header .col {
+  background: #333;
+  color: #fff;
+  border-left: 1px solid #444;
+  border-right: 1px solid #444;
+}
+header h2 {
+  margin: .2em 0 1.3em;
+}
+header a:hover {
+  text-decoration: none;
+}
+.main .col {
+  border-left: 1px solid #ddd;
+  border-right: 1px solid #ddd;
+}
+footer {
+  border-top: 1px solid #ddd;
+  padding: 1em 0;
+}
+h1 {
+  font-size: 2.7em;
+  line-height: 1.2;
+  margin-bottom: 0;
+  font-weight: lighter;
+}
+h2 {
+  font-style: italic;
+}
+table.autoschema {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+table.autoschema th,
+table.autoschema td {
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+  padding: 1em;
+}
+table.autoschema th.name {
+  border-right: 1px solid #ddd;
+  width: 20%;
+}
+table:last-child th,
+table:last-child td {
+  border-bottom: none;
+}
+table.autoschema h4 {
+  float: left;
+  margin: 0;
+  color: #db381d;
+}
+table.autoschema .details ol {
+  list-style: none;
+  float: left;
+  margin: 0;
+  list-style: decimal;
+}
+table.autoschema [class*=missing] th,
+table.autoschema [class*=missing] td {
+  background: #eee;
+  color: #777;
+}
+table.autoschema .action {
+  text-align: right;
+  vertical-align: middle;
+}
+.btn {
+  background: #0093d0;
+  border-radius: 2px;
+  padding: .6em 1em .4em;
+  border: 0;
+  text-decoration: none;
+  font-weight: bold;
+  color: #fff;
+  text-transform: uppercase;
+  font-size: .8em;
+  -webkit-transition: background-color 0.2s;
+  transition: background-color 0.2s;
+}
+.btn:hover {
+  background-color: #20bcfd;
+}
+.btn-red {
+  background-color: #db381d;
+}
+.btn-red:hover {
+  background-color: #f35136;
+}
+.btn-green {
+  background-color: #4ea829;
+}
+.btn-green:hover {
+  background-color: #5fd12f;
+}
+.btn-grey {
+  background-color: #aaa;
+}
+.btn-grey:hover {
+  background-color: #c3c3c3;
+}
+table.layout {
+  width: 100%;
+  border-collapse: collapse;
+}
+table.layout th,
+table.layout td {
+  text-align: left;
+  vertical-align: top;
+}
