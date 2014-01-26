@@ -1,0 +1,21 @@
+{
+    "name": "aurer/autoschema",
+    "description": "Autoschema is a database management tool for Laravel",
+    "keywords": ["laravel", "illuminate", "database", "schema"],
+    "authors": [
+        {
+            "name": "Aurer",
+            "email": "phil@aurer.co.uk"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0",
+        "illuminate/support": "4.*"
+    },
+    "autoload": {
+        "psr-0": {
+            "Aurer\\Autoschema\\": "src/"
+        }
+    },
+    "minimum-stability": "dev"
+}
